@@ -103,7 +103,6 @@ got you covered:
 * Thread safe
 * Namespace prefixes, ie db.writer.timerinterval=42
 * case insensitive keys
-* Providers
 * Provider for App.Config / Web.config
 * Provider for appsettings.json
 
@@ -119,9 +118,9 @@ then we discuss details in the comments.
 * Validation - required properties, undefined properties (not mapped)
 * provider bootstrapping, choose at startup using heuristics
 * builder pattern to configure providers
-* Add providers
- - ini files (memstate)
- - env vars
+* Add providers for ini files
+* Add provider for env vars
+* add more tests
 * Cascading providers - example: use env var if exists, otherwise take from appsettings
 * Expose the TypeConverter for extension or replacement
 * custom converters - if we have a custom type not recognized by the TypeConverter
