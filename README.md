@@ -1,4 +1,4 @@
-﻿* Work in progress! Not production ready
+﻿* Work in progress! Not production ready, no nuget packages available yet..
 
 ## Fig
 
@@ -77,7 +77,7 @@ got you covered:
    var provider = new AppSettingsJson();
    var fig = new CoffeeShopSettings(provider);
 ```
-```json
+```javascript
 {
   "EspressoMachineEnabled" : true,
   "CoffeeRefillInterval" : "00:42:00",
@@ -104,8 +104,8 @@ got you covered:
 * Namespace prefixes, ie db.writer.timerinterval=42
 * case insensitive keys
 * Providers
- - App.Config / Web.config
- - appsettings.json
+* Provider for App.Config / Web.config
+* Provider for appsettings.json
 
 ## Contributing
 Contributions are welcome! Create an issue for the
