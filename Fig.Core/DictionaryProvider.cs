@@ -15,17 +15,16 @@ namespace Fig
             = new Dictionary<string, string>(
                 StringComparer.InvariantCultureIgnoreCase);
 
-        public override IEnumerable<string> AllKeys(string prefix = "")
+        public IEnumerable<string> AllKeys(string prefix = "")
             => _data.Keys.Where(key => key.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase));
 
-        public override bool TryGetValue(string key, out string value)
+        public bool TryGetValue(string key, out string value)
             => _data.TryGetValue(key, out value);
 
-        public override string Get(string key)
+        public string Get(string key)
         {
             if (TryGetValue(key, out var result)) return result;
             throw new KeyNotFoundException(key);
         }
-
     }
 }

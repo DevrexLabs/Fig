@@ -59,17 +59,17 @@ namespace Fig
             }
         }
 
-        public override IEnumerable<string> AllKeys(string prefix = "")
+        public IEnumerable<string> AllKeys(string prefix = "")
         {
             return _data.Keys;
         }
 
-        public override string Get(string key)
+        public string Get(string key)
         {
             return _data[key];
         }
 
-        public override bool TryGetValue(string key, out string value)
+        public bool TryGetValue(string key, out string value)
         {
             return _data.TryGetValue(key, out value);
         }
