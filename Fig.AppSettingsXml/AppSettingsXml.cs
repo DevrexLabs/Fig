@@ -9,17 +9,17 @@ namespace Fig.AppSettingsXml
     /// <summary>
     /// Provider for NET Framework configuration files
     /// </summary>
-    public class AppSettingsXml : Provider
+    public class AppSettingsXml : IProvider
     {
         // TODO: Not sure we need this, the appSettings keys
         // are likely case insensitive already.
-        Dictionary<string, string> _caseInsensitiveMap;
+        readonly Dictionary<string, string> _caseInsensitiveMap;
 
         /// <summary>
         /// The appSettings section is a readonly NameValueCollection
         /// We use that here so that we can easily write automated tests
         /// </summary>
-        NameValueCollection _settings;
+        readonly NameValueCollection _settings;
 
         /// <summary>
         /// Create an instance of the provider based on the

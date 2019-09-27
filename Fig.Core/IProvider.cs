@@ -5,13 +5,14 @@ namespace Fig
     /// <summary>
     /// Interface for all Providers
     /// </summary>
-    public interface Provider
+    public interface IProvider
     {
         bool TryGetValue(string key, out string value);
 
         /// <summary>
-        /// Return all the keys in the
+        /// Return all the keys
         /// </summary>
+        /// <param name="prefix"></param>
         /// <returns></returns>
         IEnumerable<string> AllKeys(string prefix = "");
 

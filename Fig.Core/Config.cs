@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Fig
@@ -35,7 +34,7 @@ namespace Fig
         /// <summary>
         /// Provider of the actual configuration data
         /// </summary>
-        Provider _provider;
+        IProvider _provider;
 
         private class CacheEntry
         {
@@ -49,7 +48,7 @@ namespace Fig
             public object CurrentValue;
         }
 
-        public Config(Provider provider = null, string prefix = "")
+        public Config(IProvider provider = null, string prefix = "")
         {
             _provider = provider ?? new DictionaryProvider();
             _prefix = prefix;

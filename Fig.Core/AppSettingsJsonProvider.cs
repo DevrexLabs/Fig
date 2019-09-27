@@ -6,10 +6,11 @@ using System.Linq;
 
 namespace Fig
 {
-    public class AppSettingsJsonProvider : Provider
+    public class AppSettingsJsonProvider : IProvider
     {
+        
         JsonObject _root;
-        Dictionary<string, string> _data;
+        readonly Dictionary<string, string> _data;
 
         /// <summary>
         /// Path separator for nested properties and array indicies
@@ -18,13 +19,13 @@ namespace Fig
 
         public AppSettingsJsonProvider(string path)
         {
-            var text = File.ReadAllText(path);
-            _root = (JsonObject)JsonValue.Parse(text);
             var comparer = StringComparer.InvariantCultureIgnoreCase;
             _data = new Dictionary<string, string>(comparer);
+            var text = File.ReadAllText(path);
+            _root = (JsonObject)JsonValue.Parse(text);
             Load(_root);
         }
-
+        
         private void Load(JsonValue node, Stack<string> path = null)
         {
             path = path ?? new Stack<string>();

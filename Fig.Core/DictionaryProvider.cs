@@ -9,11 +9,10 @@ namespace Fig
     /// Provider that wraps a plain old Dictionary.
     /// Useful for testing
     /// </summary>
-    public class DictionaryProvider : Provider
+    public class DictionaryProvider : IProvider
     {
         Dictionary<string, string> _data
-            = new Dictionary<string, string>(
-                StringComparer.InvariantCultureIgnoreCase);
+            = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public IEnumerable<string> AllKeys(string prefix = "")
             => _data.Keys.Where(key => key.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase));
