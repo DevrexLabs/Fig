@@ -49,7 +49,7 @@ namespace Fig.AppSettingsXml
                 _caseInsensitiveMap[key] = key;
         }
 
-        public override IEnumerable<string> AllKeys(string prefix = "")
+        public IEnumerable<string> AllKeys(string prefix = "")
         {
             var comparison = StringComparison.InvariantCultureIgnoreCase;
             return _settings
@@ -57,7 +57,7 @@ namespace Fig.AppSettingsXml
                 .Where(key => key.StartsWith(prefix, comparison));
         }
 
-        public override string Get(string key)
+        public string Get(string key)
         {
             var casedKey = _caseInsensitiveMap[key];
             var result = _settings[casedKey];
@@ -65,7 +65,7 @@ namespace Fig.AppSettingsXml
             return result;
         }
 
-        public override bool TryGetValue(string key, out string value)
+        public bool TryGetValue(string key, out string value)
         {
             try
             {
