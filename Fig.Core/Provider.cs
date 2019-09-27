@@ -3,7 +3,7 @@
 namespace Fig
 {
     /// <summary>
-    /// Base class for providers. Could probably be an interface?
+    /// Interface for all Providers
     /// </summary>
     public interface Provider
     {
