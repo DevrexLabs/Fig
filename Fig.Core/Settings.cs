@@ -87,6 +87,14 @@ namespace Fig
             
         }
 
+        public T Get<T>(string key, Func<T> @default = null)
+        {
+            var found = SettingsDictionary
+                .TryGetValue(key, Environment, out var result);
+            if (found) return _converter.Convert<T>(result);
+            else if (@default != null) return @default();
+            else throw new KeyNotFoundException();
+        }
 
         protected T Get<T>(string key = null, [CallerMemberName] string propertyName = null, Func<T> @default = null)
         {

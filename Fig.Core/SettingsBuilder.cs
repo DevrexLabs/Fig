@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using Fig.Core;
 
@@ -9,10 +10,9 @@ namespace Fig
 {
     public class SettingsBuilder
     {
-        private Stack<Func<ISettingsSource>> _providers 
-            = new Stack<Func<ISettingsSource>>();
-
-        private SettingsDictionary _dictionary;
+        private CompositeSettingsDictionary _compositeDictionary 
+            = new CompositeSettingsDictionary();
+        
 
         /// <summary>
         /// Where to look for files
@@ -21,82 +21,69 @@ namespace Fig
         
         public T Build<T>() where T : Settings
         {
-            var compositeDictionary = new CompositeSettingsDictionary();
-            
-            while (_providers.Any())
-            {
-                _dictionary = new SettingsDictionary();
-                var provider = _providers.Pop()();
-                foreach (var (key,val) in provider)
-                {
-                    _dictionary[key] = val;
-                }
-                compositeDictionary.Add(_dictionary);
-            }
-
             var result = (T) Activator.CreateInstance(typeof(T),nonPublic:true);
-            result.SettingsDictionary = compositeDictionary;
+            result.SettingsDictionary = _compositeDictionary;
+            result.PreLoad();
             return result;
         }
 
         public SettingsBuilder UseCommandLine(string prefix, string[] args)
         {
-            //todo
-            //_providers.Push(new CommandLineProvider(prefix, args));
+            //todo, implement CommandLineSource or StringSource
             return this;
         }
 
         public SettingsBuilder UseEnvironmentVariables(string prefix)
         {
-            _providers.Push(() => new EnvironmentVarsSettingsSource(prefix));
+            
+            Add(new EnvironmentVarsSettingsSource(prefix).ToSettingsDictionary());
             return this;
+        }
+
+        private void Add(SettingsDictionary settingsDictionary)
+        {
+            _compositeDictionary.Add(settingsDictionary);
         }
 
         public SettingsBuilder UseAppSettingsJson(string fileNameTemplate, bool required)
         {
-            //_providers.Push(() => FileBasedProvider(fileName => new AppSettingsJsonConfigurationSource(fileName), fileNameTemplate, required);
+            AddFileBasedSource(file => new AppSettingsJsonSource(file), fileNameTemplate, required);
             return this;
         }
 
-        private IEnumerable<(string,string)> FileBasedProvider(
-            Func<string, ISettingsSource> providerFactory,
-            string fileNameTemplate, 
-            bool required)
+        private void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)
         {
-            var fileName = Eval(fileNameTemplate);
-            if (File.Exists(fileName))
+            var fileName = _compositeDictionary.ExpandVariables(fileNameTemplate);
+            var fullPath = Path.Combine(_basePath, fileName);
+            if (File.Exists(fullPath))
             {
-                var provider = providerFactory.Invoke(fileName);
-                foreach(var (key,val) in provider) yield return (key, val);
+                var source = sourceFactory.Invoke(fullPath);
+                Add(source.ToSettingsDictionary());
             }
-            else if (required) throw new FileNotFoundException("Configuration file not found", fileName);
-        }
-        
-        private string Eval(string fileNameTemplate)
-        {
-            return Regex.Replace(fileNameTemplate, @"\${(?<env>\w+)}", LookupKey);
+            else if (required) throw new FileNotFoundException("No such file", fullPath);
+
         }
 
-        private string LookupKey(Match m)
+        public SettingsBuilder UseIniFile(string fileNameTemplate, bool required)
         {
-            var key = m.Groups["env"].Value;
-            _dictionary.TryGetValue(key, out var result);
-            return result;
-        }
-        
-        public SettingsBuilder UseAppSettingsXml(string prefix, bool includeConnectionStrings)
-        {
+            AddFileBasedSource(f => new IniFileSettingsSource(f), fileNameTemplate, required );
             return this;
         }
 
-        public SettingsBuilder UseIniFile(string fileName, bool required)
-        {
-            return this;
-        }
-
+        /// <summary>
+        /// Set the base path for all file-based providers following this method call.
+        /// All file names will be relative to this path.
+        /// </summary>
+        /// <param name="basePath"></param>
         public SettingsBuilder BasePath(string basePath)
         {
             _basePath = basePath;
+            return this;
+        }
+
+        public SettingsBuilder UseSettingsDictionary(SettingsDictionary settingsDictionary)
+        {
+            Add(settingsDictionary);
             return this;
         }
     }

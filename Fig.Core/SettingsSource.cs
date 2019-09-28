@@ -29,5 +29,12 @@ namespace Fig
         {
             return GetEnumerator();
         }
+
+        public SettingsDictionary ToSettingsDictionary()
+        {
+            var result = new SettingsDictionary();
+            foreach (var (key, val) in GetSettings()) result[key] = val;
+            return result;
+        }
     }
 }

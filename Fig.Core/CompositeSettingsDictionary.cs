@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Fig
 {
@@ -34,7 +35,22 @@ namespace Fig
 
             return value != null;
         }
-        
-        
+
+        /// <summary>
+        /// Look for ${key} and replace with values from the dictionary 
+        /// </summary>
+        /// <param name="template">The string to expand</param>
+        /// <returns>the resulting string or an exception if key is missing</returns>
+        public string ExpandVariables(string template)
+        {
+            return Regex.Replace(template, @"\${(?<var>\w+)}", GetCurrentEnvironment);
+        }
+        private string GetCurrentEnvironment(Match m)
+        {
+            var key = m.Groups["var"]. Value;
+            TryGetValue(key, null, out var result);
+            return result;
+        }
+
     }
 }

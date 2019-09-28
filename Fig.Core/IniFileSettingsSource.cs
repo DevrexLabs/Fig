@@ -8,24 +8,19 @@ namespace Fig.Core
 {
     public class IniFileSettingsSource : SettingsSource
     {
-        private string[] _lines;
-        
-        private Dictionary<string, string> _data;
+
+        /// <summary>
+        /// Path to the file to read
+        /// </summary>
+        private string _path;
 
         public IniFileSettingsSource(string file)
         {
-            _lines = File.ReadAllLines(file);
-            var comparer = StringComparer.InvariantCultureIgnoreCase;
-            _data = new Dictionary<string, string>(comparer);
-            foreach (var (key,value) in Parse(_lines)) _data[key] = value;
+            _path = _path;
         }
         
-        internal static List<(string, string)> Parse(IEnumerable<string> lines)
+        internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
         {
-            //list instead of dictionary because
-            //we need them in order in case of duplicates
-            var result = new List<(string, string)>();
-
             var sectionMatcher = new Regex(@"^\[\s*(?<section>[A-Z0-9:]+)\s*\]$", RegexOptions.IgnoreCase);
             var keyValueMatcher = new Regex(@"^(?<key>[A-Z0-9:]+)\s*=\s*(?<value>.*)$", RegexOptions.IgnoreCase);
 
@@ -45,14 +40,13 @@ namespace Fig.Core
                     var localKey = kvpMatch.Groups["key"].Value;
                     var key = PrependSection(currentSection, localKey);
                     var value = kvpMatch.Groups["value"].Value;
-                    result.Add((key, value));
+                    yield return (key, value);
                 }
                 else
                 {
                     throw new Exception("Invalid ini file line: " + line);
                 }
             }
-            return result;
         }
 
         private static string PrependSection(string section, string key)
@@ -68,7 +62,10 @@ namespace Fig.Core
 
         protected override IEnumerable<(string, string)> GetSettings()
         {
-            return Enumerable.Empty<(string, string)>();
+            var lines = File.ReadAllLines(_path);
+            foreach (var (key, value) in Parse(lines))
+                yield return (key, value);
+
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Fig.AppSettingsXml
         
         
         public AppSettingsXmlSource()
-            :this(ConfigurationManager.AppSettings)
+            :this(ConfigurationManager.AppSettings, ConfigurationManager.ConnectionStrings)
         {
             
         }
@@ -41,7 +41,7 @@ namespace Fig.AppSettingsXml
             ConnectionStringSettingsCollection connectionStrings = null)
         {
             _nameValueCollection = nameValueCollection;
-            _connectionStrings = connectionStrings;
+            _connectionStrings = connectionStrings ?? new ConnectionStringSettingsCollection();
         }
         
 

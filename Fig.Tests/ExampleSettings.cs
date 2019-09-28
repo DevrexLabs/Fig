@@ -19,7 +19,7 @@ namespace Fig.Test
         /// </summary>
         public int RequiredInt
         {
-            get => Get<int>("customKey");
+            get => Get<int>();
             set => Set<int>(value);
         }
         

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Fig.AppSettingsXml;
 using NUnit.Framework;
 
 namespace Fig.Test
@@ -13,6 +14,9 @@ namespace Fig.Test
         public void Setup()
         {
             _settings = new ExampleSettings();
+            
+            //Normally the builder does all this stuff
+            //but we want to have a direct reference to the dictionary
             _settingsDictionary = new SettingsDictionary()
             {
                 ["ExampleSettings.MyIntProperty"] = "400",
@@ -23,7 +27,6 @@ namespace Fig.Test
             _settings.SettingsDictionary = new CompositeSettingsDictionary();
             _settings.SettingsDictionary.Add(_settingsDictionary);
             
-            //Normally Preload is called by the builder within the Build method
             _settings.PreLoad();
                 
         }
@@ -81,8 +84,8 @@ namespace Fig.Test
                 .UseAppSettingsJson(fileNameTemplate: "appSettings.${CONFIG}.json", required: false)
                 .UseAppSettingsJson(fileNameTemplate: "appSettings.json", required: false)
                 .UseAppSettingsXml(prefix: "fig:", includeConnectionStrings: false)
-                .UseIniFile(fileName: "appSettings.${CONFIG}.ini", required: false)
-                .UseIniFile(fileName: "appSettings.ini", required: false)
+                .UseIniFile("appSettings.${CONFIG}.ini", required: false)
+                .UseIniFile("appSettings.ini", required: false)
                 .Build<Settings>();
         }
     }

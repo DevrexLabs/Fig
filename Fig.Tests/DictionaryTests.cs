@@ -45,6 +45,23 @@ namespace Fig.Test
         }
 
         [Test]
+        public void CanExpandVariables()
+        {
+            var cd = new CompositeSettingsDictionary();
+            var first = new SettingsDictionary()
+            {
+                ["a"] = "a",
+                ["env"] = "test",
+                ["a:prod"] = "b"
+            };
+            cd.Add(first);
+
+            var actual = cd.ExpandVariables("appSettings.${ENV}.json");
+            Assert.AreEqual("appSettings.test.json", actual);
+
+        }
+
+        [Test]
         public void QualifiedKeyInSameLayerHasPrecedence()
         {
             var cd = new CompositeSettingsDictionary();

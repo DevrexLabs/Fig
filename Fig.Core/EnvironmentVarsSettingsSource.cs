@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,8 +10,17 @@ namespace Fig.Core
         private string _prefix;
         private char _separator;
         
-        public EnvironmentVarsSettingsSource(string prefix = "FIG_", char separator = '_')
+        private IDictionary _vars;
+        
+        
+        public EnvironmentVarsSettingsSource(string prefix = "", char separator = '_')
+            :this(Environment.GetEnvironmentVariables(), prefix, separator)
         {
+        }
+
+        internal EnvironmentVarsSettingsSource(IDictionary vars, string prefix = "", char separator = '_')
+        {
+            _vars = vars;
             _prefix = prefix;
             _separator = separator;
         }
@@ -21,8 +31,19 @@ namespace Fig.Core
         /// </summary>
         protected override IEnumerable<(string, string)> GetSettings()
         {
-            //TODO: implement!
-            return Enumerable.Empty<(string, string)>();
+            var filteredKeys = _vars
+                .Keys
+                .Cast<string>()
+                .Where(k => k.StartsWith(_prefix, StringComparison.InvariantCultureIgnoreCase));
+            
+            foreach (var key in filteredKeys)
+            {
+                var transformedKey = key
+                    .Remove(0, _prefix.Length)
+                    .Replace('_', '.');
+
+                yield return (transformedKey, (string) _vars[key]);
+            }
         }
     }
 }
