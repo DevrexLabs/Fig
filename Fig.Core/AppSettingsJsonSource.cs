@@ -6,24 +6,21 @@ using System.Linq;
 
 namespace Fig
 {
-    public class AppSettingsJsonProvider : IProvider
+    public class AppSettingsJsonSource : SettingsSource
     {
-        
-        JsonObject _root;
-        readonly Dictionary<string, string> _data;
 
         /// <summary>
         /// Path separator for nested properties and array indicies
         /// </summary>
         private string _separator = ".";
 
-        public AppSettingsJsonProvider(string path)
+        private string _path;
+
+        private Dictionary<string, string> _data;
+
+        public AppSettingsJsonSource(string path)
         {
-            var comparer = StringComparer.InvariantCultureIgnoreCase;
-            _data = new Dictionary<string, string>(comparer);
-            var text = File.ReadAllText(path);
-            _root = (JsonObject)JsonValue.Parse(text);
-            Load(_root);
+            _path = path;
         }
         
         private void Load(JsonValue node, Stack<string> path = null)
@@ -56,23 +53,19 @@ namespace Fig
                     value = value.Substring(1, value.Length - 2);
                 }
                 var key = string.Join(_separator, path.Reverse());
-                _data[key] = value;//.Substring(1, value.);
+                _data[key] = value;
             }
         }
 
-        public IEnumerable<string> AllKeys(string prefix = "")
+        protected override IEnumerable<(string, string)> GetSettings()
         {
-            return _data.Keys;
-        }
-
-        public string Get(string key)
-        {
-            return _data[key];
-        }
-
-        public bool TryGetValue(string key, out string value)
-        {
-            return _data.TryGetValue(key, out value);
+            var comparer = StringComparer.InvariantCultureIgnoreCase;
+            var text = File.ReadAllText(_path);
+            var root = (JsonObject)JsonValue.Parse(text);
+            _data = new Dictionary<string,string>();
+            Load(root);
+            foreach (var kvp in _data) 
+                yield return (kvp.Key, kvp.Value);
         }
     }
 }

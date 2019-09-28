@@ -6,12 +6,13 @@ using System.Text.RegularExpressions;
 
 namespace Fig.Core
 {
-    public class IniFileProvider : IProvider
+    public class IniFileSettingsSource : SettingsSource
     {
-        string[] _lines;
-        Dictionary<string, string> _data;
+        private string[] _lines;
+        
+        private Dictionary<string, string> _data;
 
-        public IniFileProvider(string file)
+        public IniFileSettingsSource(string file)
         {
             _lines = File.ReadAllLines(file);
             var comparer = StringComparer.InvariantCultureIgnoreCase;
@@ -63,19 +64,11 @@ namespace Fig.Core
             return key;
         }
 
-        public bool TryGetValue(string key, out string value)
-        {
-            return _data.TryGetValue(key, out value);
-        }
 
-        public IEnumerable<string> AllKeys(string prefix = "")
-        {
-            return _data.Keys;
-        }
 
-        public string Get(string key)
+        protected override IEnumerable<(string, string)> GetSettings()
         {
-            return _data[key];
+            return Enumerable.Empty<(string, string)>();
         }
     }
 }
