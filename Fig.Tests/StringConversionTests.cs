@@ -104,5 +104,28 @@ namespace Fig.Test
             Assert.That(() => _converter.Convert<ulong>("-42"), Throws.ArgumentException);
             Assert.That(() => _converter.Convert<ulong>("18446744073709551616"), Throws.ArgumentException);
         }
+
+        [Test]
+        public void ConvertByte()
+        {
+            Assert.AreEqual(1, _converter.Convert<byte>("1"));
+            Assert.AreEqual(12, _converter.Convert<byte>("12"));
+            Assert.AreEqual(255, _converter.Convert<byte>("255"));
+            Assert.That(() => _converter.Convert<byte>("256"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertEnumeration()
+        {
+            Assert.AreEqual(TestEnum.Option1, _converter.Convert<TestEnum>("1"));
+            Assert.AreEqual(TestEnum.Option2, _converter.Convert<TestEnum>("2"));
+            Assert.That(() => _converter.Convert<TestEnum>("3"), Throws.ArgumentException);
+        }
+
+        private enum TestEnum
+        {
+            Option1 = 1,
+            Option2 = 2
+        }
     }
 }
