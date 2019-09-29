@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>1.0.0-beta</PackageVersion>
+    <Title>Fig.AppSettingsXml</Title>
+    <Authors />
+    <Description>Fig support for web.config or app.config in .NET Framework</Description>
+    <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+    <PackageReleaseNotes>initial beta release, please report any bugs</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
