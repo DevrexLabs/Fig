@@ -112,15 +112,14 @@ got you covered:
 * Validation - throw if key is missing
 * Update runtime values (just add a setter)
 * INotifyPropertyChanged support
-* Namespaces hierarchical keys with dot-notation db.writer.timerinterval=42
 * Case-insensitive keys
 * Provider for App.Config / Web.config
 * Provider for appsettings.json
 * Provider for INI-files
-* Provider for Environment variables (incomplete)
-* Provider for command line args (incomplete)
+* Provider for Environment variables
+* Provider for command line args
 * Named configuration support (Debug, Release, etc) with live swap (incomplete)
-* Builder pattern to for flexible configuration (incomplete)
+* Builder pattern to for flexible configuration
 * Combine providers into layers
 * ConnectionStrings from xml config included
 
