@@ -75,10 +75,10 @@ namespace Fig.Test
         }
 
         [Test]
-        public void HappyPath()
+        public void BuilderBonanza()
         {
             var settings = new SettingsBuilder()
-                .UseCommandLine(prefix: "fig:", Array.Empty<string>())
+                .UseCommandLine(new []{"--fig:MySettings.=coffee", "--fig:"})
                 .UseEnvironmentVariables(prefix: "FIG_")
                 .BasePath(Directory.GetCurrentDirectory())
                 .UseAppSettingsJson(fileNameTemplate: "appSettings.${CONFIG}.json", required: false)
