@@ -115,11 +115,14 @@ namespace Fig.Test
         }
 
         [Test]
-        public void ConvertEnumeration()
+        public void ConvertEnum()
         {
             Assert.AreEqual(TestEnum.Option1, _converter.Convert<TestEnum>("1"));
             Assert.AreEqual(TestEnum.Option2, _converter.Convert<TestEnum>("2"));
+            Assert.AreEqual(TestEnum.Option1, _converter.Convert<TestEnum>("Option1"));
+            Assert.AreEqual(TestEnum.Option2, _converter.Convert<TestEnum>("Option2"));
             Assert.That(() => _converter.Convert<TestEnum>("3"), Throws.ArgumentException);
+            Assert.That(() => _converter.Convert<TestEnum>("Option3"), Throws.Exception);
         }
 
         private enum TestEnum
