@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -27,9 +26,9 @@ namespace Fig
             return result;
         }
 
-        public SettingsBuilder UseCommandLine(string prefix, string[] args)
+        public SettingsBuilder UseCommandLine(string[] args, string prefix = "--fig:",  char delimiter = '=' )
         {
-            //todo, implement CommandLineSource or StringSource
+            Add(new StringArraySource(args, prefix, delimiter).ToSettingsDictionary());
             return this;
         }
 

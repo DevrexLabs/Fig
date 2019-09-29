@@ -14,9 +14,9 @@ namespace Fig.Core
         /// </summary>
         private string _path;
 
-        public IniFileSettingsSource(string file)
+        public IniFileSettingsSource(string path)
         {
-            _path = _path;
+            _path = path;
         }
         
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)

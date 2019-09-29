@@ -3,6 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Fig</PackageId>
+    <PackageVersion>1.0.0-beta</PackageVersion>
+    <Title>Fig</Title>
+    <Authors />
+    <Description>A library to help you load and access configuration data from files, environment variables and the command line.</Description>
+    <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
