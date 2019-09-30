@@ -19,7 +19,7 @@ namespace Fig
             // If target type is an enum, check that the parsed string value is a valid value
             if (targetType.IsEnum && !Enum.IsDefined(targetType, convertedValue))
             {
-                throw new ArgumentException($"The string '{nameof(value)}' provided is not a valid Enum value.");
+                throw new ArgumentException($"The argument provided is not a valid Enum value.");
             }
 
             return convertedValue;
