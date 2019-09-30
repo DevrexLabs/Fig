@@ -1,4 +1,4 @@
-﻿* Work in progress! Not production ready, no nuget packages available yet..
+﻿
 
 ## Fig
 
@@ -14,6 +14,7 @@ Do you have code like the following spread around your code base?
 ```
 
 Fig can help you keep this nice and clean:
+
 
 ```csharp
   var settings = new SettingsBuilder()
@@ -53,7 +54,7 @@ or inherit from Fig.Settings class. Here is the inheritance approach:
    Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
 ```
 
-To use a POCO you would call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
+If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
 
 
 That's pretty useful as it is but wait, there's more! You can modify properties
@@ -104,6 +105,15 @@ got you covered:
   },
   "AllowedHosts": "*"
 }
+```
+
+## Install from nuget
+```bash
+# the core package with support for command line, json, ini and environment variables
+Install-Package Fig -prerelease
+
+# web.config and app.config support is in a separate package
+Install-Package Fig.AppSettingsXml -prerelease
 ```
 
 ## Features

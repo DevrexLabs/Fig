@@ -5,7 +5,7 @@
     <PackOnBuild>true</PackOnBuild>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Fig</PackageId>
-    <PackageVersion>1.0.0-beta</PackageVersion>
+    <PackageVersion>1.0.1-beta</PackageVersion>
     <Title>Fig</Title>
     <Authors />
     <Description>A library to help you load and access configuration data from files, environment variables and the command line.</Description>

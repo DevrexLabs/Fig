@@ -49,7 +49,7 @@ namespace Fig
             _keyPrefix = keyPrefix ?? GetType().Name;
         }
         
-        internal Settings()
+        public Settings()
             : this(new InvariantStringConverter())
         {}
         
@@ -84,7 +84,7 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public void Bind<T>(T target, bool requireAll = true, string prefix = null)
         {
-            
+            throw new NotImplementedException();
         }
 
         public T Get<T>(string key, Func<T> @default = null)
