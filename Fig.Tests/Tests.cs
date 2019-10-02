@@ -88,5 +88,24 @@ namespace Fig.Test
                 .UseIniFile("appSettings.ini", required: false)
                 .Build();
         }
+
+        [Test]
+        public void BindingPath()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build<MySettings>();
+            
+            Assert.AreEqual(TimeSpan.FromMinutes(20), settings.MyTimeSpan);
+        }
+    }
+
+    class MySettings : Settings
+    {
+        public MySettings()
+            :base(bindingPath: "")
+        {}
+
+        public TimeSpan MyTimeSpan => Get<TimeSpan>();
     }
 }

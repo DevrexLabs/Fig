@@ -155,6 +155,8 @@ namespace Fig
                 try
                 {
                     var getter = propertyInfo.GetGetMethod();
+                    if (getter == null) continue;
+                    
                     var val = getter.Invoke(this, Array.Empty<object>());
                     _cache[propertyInfo.Name] = new CacheEntry(val);
                 }
@@ -162,7 +164,7 @@ namespace Fig
                 {
                     if (tie.InnerException is KeyNotFoundException knf)
                         errors.Add("Missing: " + knf.Message);
-                    else throw new Exception("Unexpected inner exception");
+                    else throw new Exception("Unexpected inner exception", tie.InnerException);
                 }
                 catch(NotSupportedException)
                 {
