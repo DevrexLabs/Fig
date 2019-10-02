@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>1.0.0-beta</PackageVersion>
+    <PackageVersion>1.1.0</PackageVersion>
     <Title>Fig.AppSettingsXml</Title>
     <Authors />
     <Description>Fig support for web.config or app.config in .NET Framework</Description>
