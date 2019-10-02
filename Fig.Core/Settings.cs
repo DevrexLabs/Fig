@@ -115,10 +115,15 @@ namespace Fig
             return (T) Get(typeof(T), propertyName, key, () => @default());
         }
 
+        private string GetKey(string key, string propertyName)
+        {
+            key = key ?? propertyName;
+            if (_bindingPath.Length > 0) key = _bindingPath + "." + key;
+            return key;
+        }
         
         private object Get(Type propertyType, string propertyName, string key = null, Func<object> @default = null)
         {
-            key = _bindingPath + "." +  (key ?? propertyName);
             lock (this)
             {
                 if (_cache.ContainsKey(propertyName))
@@ -126,6 +131,7 @@ namespace Fig
                     return _cache[propertyName].CurrentValue;
                 }
 
+                key = GetKey(key, propertyName);
                 if (!SettingsDictionary.TryGetValue(key, Configuration, out string value))
                 {
                     if (@default == null) throw new KeyNotFoundException(key);
@@ -135,7 +141,7 @@ namespace Fig
                 //TODO: This could throw, deal with it
                 var result = _converter.Convert(value, propertyType);
 
-                 _cache[key] = new CacheEntry(result);
+                 _cache[propertyName] = new CacheEntry(result);
 
                 return result;
             }

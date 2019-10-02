@@ -23,6 +23,7 @@ namespace Fig.Test
                 ["ExampleSettings.RequiredInt"] = "200",
                 ["ExampleSettings.MyReadonlyIntProperty"] = "600",
                 ["ExampleSettings.MyTimeSpan"] = "00:20:00",
+                ["MyTimeSpan"]  = "00:42:00"
             };
             _settings.SettingsDictionary = new CompositeSettingsDictionary();
             _settings.SettingsDictionary.Add(_settingsDictionary);
@@ -96,7 +97,7 @@ namespace Fig.Test
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build<MySettings>();
             
-            Assert.AreEqual(TimeSpan.FromMinutes(20), settings.MyTimeSpan);
+            Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
         }
     }
 

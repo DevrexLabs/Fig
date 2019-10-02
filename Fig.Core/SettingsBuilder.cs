@@ -26,6 +26,7 @@ namespace Fig
         public T Build<T>() where T : Settings, new()
         {
             var result = Activator.CreateInstance<T>();
+            result.SettingsDictionary = _compositeDictionary;
             result.PreLoad();
             return result;
         }
