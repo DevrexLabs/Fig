@@ -17,11 +17,15 @@ namespace Fig
         /// Where to look for files
         /// </summary>
         private string _basePath;
-        
-        public T Build<T>() where T : Settings
+
+        public Settings Build()
         {
-            var result = (T) Activator.CreateInstance(typeof(T),nonPublic:true);
-            result.SettingsDictionary = _compositeDictionary;
+            return new Settings(_compositeDictionary);
+        }
+        
+        public T Build<T>() where T : Settings, new()
+        {
+            var result = Activator.CreateInstance<T>();
             result.PreLoad();
             return result;
         }

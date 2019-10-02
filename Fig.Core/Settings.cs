@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Xml.Schema;
 
 namespace Fig
 {
@@ -24,10 +23,10 @@ namespace Fig
         private IStringConverter _converter;
 
         /// <summary>
-        /// Key prefix is prepended to the property name when binding to a class
+        /// When binding, look properties on this node in the tree
         /// default is to use the name of the class
         /// </summary>
-        private string _keyPrefix;
+        private string _bindingPath;
 
         private class CacheEntry
         {
@@ -41,20 +40,23 @@ namespace Fig
             }
         }
 
-        internal Settings(IStringConverter converter = null, string keyPrefix = null)
+        public Settings(string bindingPath = null, IStringConverter converter = null)
         {
             _converter = converter ?? new InvariantStringConverter();
             var comparer = StringComparer.InvariantCultureIgnoreCase;
             _cache = new Dictionary<string, CacheEntry>(comparer);
-            _keyPrefix = keyPrefix ?? GetType().Name;
+            _bindingPath = bindingPath ?? GetBindingPath();
         }
-        
-        public Settings()
-            : this(new InvariantStringConverter())
-        {}
-        
-        internal Settings(CompositeSettingsDictionary settingsDictionary, IStringConverter converter = null)
-            :this(converter)
+
+        private string GetBindingPath()
+        {
+            if (GetType() == typeof(Settings)) return "";
+            else return GetType().Name;
+        }
+
+       
+        internal Settings(CompositeSettingsDictionary settingsDictionary, string bindingPath = null, IStringConverter converter = null)
+            :this(bindingPath, converter)
         {
             SettingsDictionary = settingsDictionary;
         }
@@ -63,7 +65,13 @@ namespace Fig
         /// The current environment, used as a suffix when looking up keys, will take precedence over
         /// key with same name without suffix. Suffix does not include separator.
         /// </summary>
-        public string Environment { get; set; }
+        public string Configuration { get; private set; }
+
+        public void SwitchEnvironment(string configurationName)
+        {
+            Configuration = configurationName;
+            //todo, reload
+        }
         
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
@@ -90,7 +98,7 @@ namespace Fig
         public T Get<T>(string key, Func<T> @default = null)
         {
             var found = SettingsDictionary
-                .TryGetValue(key, Environment, out var result);
+                .TryGetValue(key, Configuration, out var result);
             if (found) return _converter.Convert<T>(result);
             else if (@default != null) return @default();
             else throw new KeyNotFoundException();
@@ -110,7 +118,7 @@ namespace Fig
         
         private object Get(Type propertyType, string propertyName, string key = null, Func<object> @default = null)
         {
-            key = _keyPrefix + "." +  (key ?? propertyName);
+            key = _bindingPath + "." +  (key ?? propertyName);
             lock (this)
             {
                 if (_cache.ContainsKey(propertyName))
@@ -118,7 +126,7 @@ namespace Fig
                     return _cache[propertyName].CurrentValue;
                 }
 
-                if (!SettingsDictionary.TryGetValue(key, Environment, out string value))
+                if (!SettingsDictionary.TryGetValue(key, Configuration, out string value))
                 {
                     if (@default == null) throw new KeyNotFoundException(key);
                     return @default.Invoke();

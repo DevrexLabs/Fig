@@ -15,7 +15,7 @@ namespace Fig.Test
                 {
                     ["CoffeeRefillInterval"] = "00:05:00"
                 })
-                .Build<Settings>();
+                .Build();
     
             var key = "CoffeeRefillInterval";
             

@@ -86,7 +86,7 @@ namespace Fig.Test
                 .UseAppSettingsXml(prefix: "fig:", includeConnectionStrings: false)
                 .UseIniFile("appSettings.${CONFIG}.ini", required: false)
                 .UseIniFile("appSettings.ini", required: false)
-                .Build<Settings>();
+                .Build();
         }
     }
 }
