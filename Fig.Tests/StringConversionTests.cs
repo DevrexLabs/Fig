@@ -21,7 +21,7 @@ namespace Fig.Test
             var parsed = _converter.Convert<TimeSpan>(asString);
             Assert.AreEqual(timeSpan, parsed);
         }
-        
+
         [Test]
         public void ConvertDateTime()
         {
@@ -47,6 +47,88 @@ namespace Fig.Test
         {
             var parsed = _converter.Convert<double>("3.141592");
             Assert.AreEqual(3.141592, parsed, 0.0000001);
+        }
+
+        [Test]
+        public void ConvertInteger()
+        {
+            Assert.AreEqual(42, _converter.Convert<int>("42"));
+            Assert.AreEqual(-42, _converter.Convert<int>("-42"));
+            Assert.That(() => _converter.Convert<int>("42.100"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertUnsignedInteger()
+        {
+            Assert.AreEqual(42, _converter.Convert<uint>("42"));
+            Assert.That(() => _converter.Convert<uint>("-42"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertFloat()
+        {
+            Assert.AreEqual(42.01f, _converter.Convert<float>("42.01"));
+            Assert.AreEqual(-42.01f, _converter.Convert<float>("-42.01"));
+
+            Assert.That(() => _converter.Convert<float>("-4.402823E+38"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertShort()
+        {
+            Assert.AreEqual(42, _converter.Convert<short>("42"));
+            Assert.AreEqual(-42, _converter.Convert<short>("-42"));
+            Assert.That(() => _converter.Convert<short>("32768"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertUnsignedShort()
+        {
+            Assert.AreEqual(42, _converter.Convert<ushort>("42"));
+            Assert.That(() => _converter.Convert<ushort>("65536"), Throws.ArgumentException);
+            Assert.That(() => _converter.Convert<ushort>("-42"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertLong()
+        {
+            Assert.AreEqual(42, _converter.Convert<long>("42"));
+            Assert.AreEqual(-42, _converter.Convert<long>("-42"));
+            Assert.That(() => _converter.Convert<long>("9223372036854775808"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertUnsignedLong()
+        {
+            Assert.AreEqual(42, _converter.Convert<ulong>("42"));
+            Assert.That(() => _converter.Convert<ulong>("-42"), Throws.ArgumentException);
+            Assert.That(() => _converter.Convert<ulong>("18446744073709551616"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertByte()
+        {
+            Assert.AreEqual(1, _converter.Convert<byte>("1"));
+            Assert.AreEqual(12, _converter.Convert<byte>("12"));
+            Assert.AreEqual(255, _converter.Convert<byte>("255"));
+            Assert.That(() => _converter.Convert<byte>("256"), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ConvertEnum()
+        {
+            Assert.AreEqual(TestEnum.Option1, _converter.Convert<TestEnum>("1"));
+            Assert.AreEqual(TestEnum.Option2, _converter.Convert<TestEnum>("2"));
+            Assert.AreEqual(TestEnum.Option1, _converter.Convert<TestEnum>("Option1"));
+            Assert.AreEqual(TestEnum.Option2, _converter.Convert<TestEnum>("Option2"));
+            Assert.That(() => _converter.Convert<TestEnum>("3"), Throws.ArgumentException);
+            Assert.That(() => _converter.Convert<TestEnum>("Option3"), Throws.Exception);
+        }
+
+        private enum TestEnum
+        {
+            Option1 = 1,
+            Option2 = 2
         }
     }
 }
