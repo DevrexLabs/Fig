@@ -18,11 +18,11 @@ namespace Fig.Core
         {
             _path = path;
         }
-        
+
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
         {
-            var sectionMatcher = new Regex(@"^\[\s*(?<section>[A-Z0-9:]+)\s*\]$", RegexOptions.IgnoreCase);
-            var keyValueMatcher = new Regex(@"^(?<key>[A-Z0-9:]+)\s*=\s*(?<value>.*)$", RegexOptions.IgnoreCase);
+            var sectionMatcher = new Regex(@"^\[(.+)\]$", RegexOptions.IgnoreCase);
+            var keyValueMatcher = new Regex(@"^\s*([^#].+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
 
             //Last section matched
             var currentSection = "";
@@ -33,13 +33,13 @@ namespace Fig.Core
 
                 if (sectionMatcher.TryMatch(line, out var sectionMatch))
                 {
-                    currentSection = sectionMatch.Groups["section"].Value;
+                    currentSection = sectionMatch.Groups[1].Value?.Trim();
                 }
                 else if (keyValueMatcher.TryMatch(line, out var kvpMatch))
                 {
-                    var localKey = kvpMatch.Groups["key"].Value;
+                    var localKey = kvpMatch.Groups[1].Value?.Trim();
                     var key = PrependSection(currentSection, localKey);
-                    var value = kvpMatch.Groups["value"].Value;
+                    var value = kvpMatch.Groups[2].Value?.Trim();
                     yield return (key, value);
                 }
                 else
@@ -53,7 +53,7 @@ namespace Fig.Core
         {
             if (!string.IsNullOrEmpty(section))
             {
-                key = section + ":" + key;
+                key = section + "." + key;
             }
             return key;
         }
