@@ -10,7 +10,7 @@ namespace Fig
     {
 
         /// <summary>
-        /// Path separator for nested properties and array indicies
+        /// Path separator used in the output
         /// </summary>
         private string _separator = ".";
 
@@ -18,6 +18,10 @@ namespace Fig
 
         private Dictionary<string, string> _data;
 
+        /// <summary>
+        /// Create an instance of AppSettingsJsonSource
+        /// </summary>
+        /// <param name="path">Path to the json file to load</param>
         public AppSettingsJsonSource(string path)
         {
             _path = path;
@@ -59,7 +63,6 @@ namespace Fig
 
         protected override IEnumerable<(string, string)> GetSettings()
         {
-            var comparer = StringComparer.InvariantCultureIgnoreCase;
             var text = File.ReadAllText(_path);
             var root = (JsonObject)JsonValue.Parse(text);
             _data = new Dictionary<string,string>();

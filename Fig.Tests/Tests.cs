@@ -79,7 +79,7 @@ namespace Fig.Test
         public void BuilderBonanza()
         {
             var settings = new SettingsBuilder()
-                .UseCommandLine(new []{"--fig:MySettings.=coffee", "--fig:"})
+                .UseCommandLine(new []{"--fig:MySettings.DefaultBeverage=coffee"})
                 .UseEnvironmentVariables(prefix: "FIG_")
                 .BasePath(Directory.GetCurrentDirectory())
                 .UseAppSettingsJson(fileNameTemplate: "appSettings.${CONFIG}.json", required: false)

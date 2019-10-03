@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Fig.AppSettingsJson\Fig.AppSettingsJson.csproj" />
     <ProjectReference Include="..\Fig.Core\Fig.Core.csproj" />
     <ProjectReference Include="..\Fig.AppSettingsXml\Fig.AppSettingsXml.csproj" />
   </ItemGroup>

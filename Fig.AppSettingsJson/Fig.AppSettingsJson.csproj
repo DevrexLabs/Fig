@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageVersion>1.2.0</PackageVersion>
+        <Authors>Robert Friberg et al</Authors>
+        <Copyright>Robert Friberg et al</Copyright>
+        <Title>Fig.AppSettingsJson</Title>
+        <Description>Fig configuration source provider for appSettins.json files</Description>
+        <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Fig.Core\Fig.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Json" Version="4.6.0" />
+    </ItemGroup>
+
+</Project>

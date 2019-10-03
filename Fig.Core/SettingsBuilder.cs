@@ -49,13 +49,7 @@ namespace Fig
             _compositeDictionary.Add(settingsDictionary);
         }
 
-        public SettingsBuilder UseAppSettingsJson(string fileNameTemplate, bool required)
-        {
-            AddFileBasedSource(file => new AppSettingsJsonSource(file), fileNameTemplate, required);
-            return this;
-        }
-
-        private void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)
+        internal void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)
         {
             var fileName = _compositeDictionary.ExpandVariables(fileNameTemplate);
             var fullPath = Path.Combine(_basePath, fileName);

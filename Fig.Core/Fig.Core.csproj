@@ -5,17 +5,15 @@
     <PackOnBuild>true</PackOnBuild>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Fig</PackageId>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.2.0</PackageVersion>
     <Title>Fig</Title>
-    <Authors />
+    <Authors>Robert Friberg et al</Authors>
     <Description>A library to help you load and access configuration data from files, environment variables and the command line.</Description>
     <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+    <Copyright>Robert Friberg et al</Copyright>
+    <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Json" Version="4.5.0" />
-  </ItemGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />
   </ItemGroup>
