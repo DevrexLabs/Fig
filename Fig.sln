@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.AppSettingsXml", "Fig.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.AppSettingsJson", "Fig.AppSettingsJson\Fig.AppSettingsJson.csproj", "{D51AF7ED-8BBA-451D-8601-B25BBB507450}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.All", "Fig.All\Fig.All.csproj", "{2F65DA14-1E43-4184-9D51-FBFE047788DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{D51AF7ED-8BBA-451D-8601-B25BBB507450}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D51AF7ED-8BBA-451D-8601-B25BBB507450}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D51AF7ED-8BBA-451D-8601-B25BBB507450}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

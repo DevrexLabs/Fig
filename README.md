@@ -21,11 +21,18 @@ Fig can help you keep this nice and clean:
     .UseAppSettingsXml()
     .Build<Settings>();
     
-  var key = "CoffeeRefillInterval";
-  var refillInterval = settings.Get<TimeSpan>(key, default: "00:10:00");  
 
-  //if key is missing and no default is present, a KeyNotFoundException is thrown
-  refillInterval = settings.Get<TimeSpan>(key);
+  //get a value by key and convert to your target type
+  //a KeyNotFoundException is thrown if key is missing
+
+  var key = "CoffeeRefillInterval";
+  var refillInterval = settings.Get<TimeSpan>(key);
+
+
+  // if key is optional, provide a default
+  // notice how the return type is derived from the default expression
+  var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));   
+
 ```
 
 If you prefer a strongly typed class there are 2 options: either bind to a POCO
@@ -55,7 +62,7 @@ or inherit from Fig.Settings class. Here is the inheritance approach:
 ```
 
 If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
-
+(not yet implemented)
 
 That's pretty useful as it is but wait, there's more! You can modify properties
 at runtime and respond to changes by subscribing to the `PropertyChanged` event.
@@ -109,11 +116,18 @@ got you covered:
 
 ## Install from nuget
 ```bash
+#Everything in a single bundle
+Install-Package Fig.All
+
 # the core package with support for command line, json, ini and environment variables
-Install-Package Fig -prerelease
+Install-Package Fig
 
 # web.config and app.config support is in a separate package
-Install-Package Fig.AppSettingsXml -prerelease
+Install-Package Fig.AppSettingsXml
+
+#AppSettings json support
+Install-Package Fig.AppSettingsJson
+
 ```
 
 ## Features

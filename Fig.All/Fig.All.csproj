@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <PackageVersion>1.2.0</PackageVersion>
+        <Title>Fig.All</Title>
+        <Authors>Robert Friberg et al</Authors>
+        <Description>All of the libraries in a single nuget package for your convenience</Description>
+        <Copyright>Robert Friberg et al</Copyright>
+        <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Fig.AppSettingsJson\Fig.AppSettingsJson.csproj" />
+      <ProjectReference Include="..\Fig.AppSettingsXml\Fig.AppSettingsXml.csproj" />
+      <ProjectReference Include="..\Fig.Core\Fig.Core.csproj" />
+    </ItemGroup>
+
+</Project>
