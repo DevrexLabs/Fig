@@ -9,9 +9,9 @@ namespace Fig
 {
     public class Settings : INotifyPropertyChanged
     {
-        
+
         /// <summary>
-        /// Current in-memory valuesn
+        /// Current in-memory values
         /// </summary>
         private Dictionary<string, CacheEntry> _cache;
 
@@ -54,9 +54,9 @@ namespace Fig
             else return GetType().Name;
         }
 
-       
+
         internal Settings(CompositeSettingsDictionary settingsDictionary, string bindingPath = null, IStringConverter converter = null)
-            :this(bindingPath, converter)
+            : this(bindingPath, converter)
         {
             SettingsDictionary = settingsDictionary;
         }
@@ -72,7 +72,7 @@ namespace Fig
             Configuration = configurationName;
             //todo, reload
         }
-        
+
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
         /// </summary>
@@ -84,7 +84,7 @@ namespace Fig
         }
 
         /// <summary>
-        /// 
+        /// Populate the properties on a provided Type that match the keys in the SettingsDictionary.
         /// </summary>
         /// <param name="target">The object to set properties on</param>
         /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
@@ -92,7 +92,17 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public void Bind<T>(T target, bool requireAll = true, string prefix = null)
         {
-            throw new NotImplementedException();
+            var props = typeof(T).GetProperties();
+            foreach (var prop in props)
+            {
+                if (SettingsDictionary.TryGetValue(prop.Name, Configuration, out var result) || requireAll) {
+                    prop.SetValue(
+                        target,
+                        Get(prop.PropertyType, prop.Name)
+                    );
+                }
+
+            }
         }
 
         public T Get<T>(string key, Func<T> @default = null)
@@ -106,13 +116,13 @@ namespace Fig
 
         protected T Get<T>(string key = null, [CallerMemberName] string propertyName = null, Func<T> @default = null)
         {
-            if (@default is null) return (T) Get(typeof(T), propertyName);
-            else return (T) Get(typeof(T), propertyName, key,() => @default());
+            if (@default is null) return (T)Get(typeof(T), propertyName);
+            else return (T)Get(typeof(T), propertyName, key, () => @default());
         }
 
         protected T Get<T>(Func<T> @default, string key = null, [CallerMemberName] string propertyName = null)
         {
-            return (T) Get(typeof(T), propertyName, key, () => @default());
+            return (T)Get(typeof(T), propertyName, key, () => @default());
         }
 
         private string GetKey(string key, string propertyName)
@@ -121,7 +131,7 @@ namespace Fig
             if (_bindingPath.Length > 0) key = _bindingPath + "." + key;
             return key;
         }
-        
+
         private object Get(Type propertyType, string propertyName, string key = null, Func<object> @default = null)
         {
             lock (this)
@@ -141,7 +151,7 @@ namespace Fig
                 //TODO: This could throw, deal with it
                 var result = _converter.Convert(value, propertyType);
 
-                 _cache[propertyName] = new CacheEntry(result);
+                _cache[propertyName] = new CacheEntry(result);
 
                 return result;
             }
@@ -156,13 +166,13 @@ namespace Fig
             _cache = new Dictionary<string, CacheEntry>();
             var errors = new List<string>();
 
-            foreach(var propertyInfo in GetType().GetProperties())
+            foreach (var propertyInfo in GetType().GetProperties())
             {
                 try
                 {
                     var getter = propertyInfo.GetGetMethod();
                     if (getter == null) continue;
-                    
+
                     var val = getter.Invoke(this, Array.Empty<object>());
                     _cache[propertyInfo.Name] = new CacheEntry(val);
                 }
@@ -172,7 +182,7 @@ namespace Fig
                         errors.Add("Missing: " + knf.Message);
                     else throw new Exception("Unexpected inner exception", tie.InnerException);
                 }
-                catch(NotSupportedException)
+                catch (NotSupportedException)
                 {
                     errors.Add("Can't parse: " + propertyInfo.Name);
                 }
@@ -188,12 +198,12 @@ namespace Fig
         /// <param name="propertyName"></param>
         protected void Set<T>(T value, [CallerMemberName] string propertyName = null)
         {
-            var key =  propertyName ?? throw new ArgumentException(nameof(propertyName));
+            var key = propertyName ?? throw new ArgumentException(nameof(propertyName));
             var entry = _cache[key];
 
             if (entry.CurrentValue != null && !entry.CurrentValue.Equals(value))
             {
-                entry.CurrentValue = value; 
+                entry.CurrentValue = value;
                 NotifyPropertyChanged(key);
             }
 
