@@ -10,13 +10,15 @@ namespace Fig.Core
     {
 
         /// <summary>
-        /// Path to the file to read
+        /// Lines of the read file
         /// </summary>
-        private string _path;
+        private string[] _lines;
 
-        public IniFileSettingsSource(string path)
+        public IniFileSettingsSource(string path) : this(File.ReadAllLines(path)) { }
+
+        internal IniFileSettingsSource(string[] lines)
         {
-            _path = path;
+            _lines = lines;
         }
 
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
@@ -62,8 +64,7 @@ namespace Fig.Core
 
         protected override IEnumerable<(string, string)> GetSettings()
         {
-            var lines = File.ReadAllLines(_path);
-            foreach (var (key, value) in Parse(lines))
+            foreach (var (key, value) in Parse(_lines))
                 yield return (key, value);
 
         }

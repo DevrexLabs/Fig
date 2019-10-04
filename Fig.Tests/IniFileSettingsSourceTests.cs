@@ -11,30 +11,17 @@ namespace Fig.Test
     public class IniFileSettingsSourceTests
     {
         private IniFileSettingsSource _iniFileSettingsSource;
-        private string _testFilePath;
 
         [SetUp]
         public void Setup()
         {
-            // Temporary test file path
-            _testFilePath = $"{Path.GetTempPath()}IniFileSettingsSourceTest_{System.DateTime.Now.Ticks}.ini";
-
-            // Generate test Ini File
-            File.WriteAllText(_testFilePath, String.Join(Environment.NewLine, new string[] {
+            _iniFileSettingsSource = new IniFileSettingsSource(new string[] {
                 "key1=This is a string with spaces",
                 "[Section.A]",
                 "ScanInterval=00:25:00",
                 "#comment",
                 "[OtherSection]",
-                "key3=300"}));
-
-            _iniFileSettingsSource = new IniFileSettingsSource(_testFilePath);
-        }
-
-        [TearDown]
-        public void Teardown()
-        {
-            File.Delete(_testFilePath);
+                "key3=300"});
         }
 
         [Test]
