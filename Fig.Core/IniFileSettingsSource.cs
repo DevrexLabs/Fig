@@ -10,19 +10,21 @@ namespace Fig.Core
     {
 
         /// <summary>
-        /// Path to the file to read
+        /// Lines of the read file
         /// </summary>
-        private string _path;
+        private string[] _lines;
 
-        public IniFileSettingsSource(string path)
+        public IniFileSettingsSource(string path) : this(File.ReadAllLines(path)) { }
+
+        internal IniFileSettingsSource(string[] lines)
         {
-            _path = path;
+            _lines = lines;
         }
-        
+
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
         {
-            var sectionMatcher = new Regex(@"^\[\s*(?<section>[A-Z0-9:]+)\s*\]$", RegexOptions.IgnoreCase);
-            var keyValueMatcher = new Regex(@"^(?<key>[A-Z0-9:]+)\s*=\s*(?<value>.*)$", RegexOptions.IgnoreCase);
+            var sectionMatcher = new Regex(@"^\[(.+)\]$", RegexOptions.IgnoreCase);
+            var keyValueMatcher = new Regex(@"^\s*([^#].+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
 
             //Last section matched
             var currentSection = "";
@@ -33,13 +35,13 @@ namespace Fig.Core
 
                 if (sectionMatcher.TryMatch(line, out var sectionMatch))
                 {
-                    currentSection = sectionMatch.Groups["section"].Value;
+                    currentSection = sectionMatch.Groups[1].Value?.Trim();
                 }
                 else if (keyValueMatcher.TryMatch(line, out var kvpMatch))
                 {
-                    var localKey = kvpMatch.Groups["key"].Value;
+                    var localKey = kvpMatch.Groups[1].Value?.Trim();
                     var key = PrependSection(currentSection, localKey);
-                    var value = kvpMatch.Groups["value"].Value;
+                    var value = kvpMatch.Groups[2].Value?.Trim();
                     yield return (key, value);
                 }
                 else
@@ -53,7 +55,7 @@ namespace Fig.Core
         {
             if (!string.IsNullOrEmpty(section))
             {
-                key = section + ":" + key;
+                key = section + "." + key;
             }
             return key;
         }
@@ -62,8 +64,7 @@ namespace Fig.Core
 
         protected override IEnumerable<(string, string)> GetSettings()
         {
-            var lines = File.ReadAllLines(_path);
-            foreach (var (key, value) in Parse(lines))
+            foreach (var (key, value) in Parse(_lines))
                 yield return (key, value);
 
         }
