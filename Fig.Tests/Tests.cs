@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Fig.AppSettingsXml;
 using NUnit.Framework;
 
@@ -23,13 +25,18 @@ namespace Fig.Test
                 ["ExampleSettings.RequiredInt"] = "200",
                 ["ExampleSettings.MyReadonlyIntProperty"] = "600",
                 ["ExampleSettings.MyTimeSpan"] = "00:20:00",
-                ["MyTimeSpan"]  = "00:42:00"
+                ["MyTimeSpan"]  = "00:42:00",
+                ["Key"] = "Key",
+                ["Key:PROD"] = "PROD",
+                ["Key:TEST"] = "TEST",
+                ["Key:PROD2"] = "PROD",
+                ["Config"] = "PROD"
             };
+            
             _settings.SettingsDictionary = new CompositeSettingsDictionary();
             _settings.SettingsDictionary.Add(_settingsDictionary);
             
             _settings.PreLoad();
-                
         }
         
         [Test]
@@ -59,7 +66,6 @@ namespace Fig.Test
         [Test]
         public void CanUpdateRuntimeValue()
         {
-            _settings.PreLoad();
             _settings.MyIntProperty = 100;
             Assert.AreEqual(100, _settings.MyIntProperty);
         }
@@ -67,7 +73,6 @@ namespace Fig.Test
         [Test]
         public void MissingPropertyWithoutDefaultFailsValidation()
         {
-
             bool removed = _settingsDictionary.Remove("ExampleSettings.RequiredInt");
             Assert.IsTrue(removed);
             Assert.Throws<ConfigurationException>(() => { 
@@ -99,14 +104,57 @@ namespace Fig.Test
             
             Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
         }
+        
+        [Test]
+        public void ConfigurationIsRespected()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build();
+            
+            //No Configuration, should return unqualified setting
+            Assert.AreEqual("Key", settings.Get<string>("Key"));
+            
+            settings.SetConfiguration("prod");
+            Assert.AreEqual("PROD", settings.Get<string>("Key"));
+
+            settings.SetConfiguration("test");
+            Assert.AreEqual("TEST", settings.Get<string>("Key"));
+        }
+        
+        public void ConfigurationChangeFiresPropertyChangeEvents()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build<MySettings>();
+
+            var propertyChangeNotifications = new List<string>();
+            settings.PropertyChanged += (sender, args) => propertyChangeNotifications.Add(args.PropertyName);
+           
+            Assert.AreEqual("Key", settings.Key);
+
+            settings.SetConfiguration("prod");
+            
+            Assert.AreEqual("Key", propertyChangeNotifications.Single());
+            
+            //changing config but no properties will change
+            settings.SetConfiguration("prod2");
+            
+            //no changes so we shouldn't have received additional events
+            Assert.AreEqual("Key", propertyChangeNotifications.Single());
+            
+        }
+
     }
 
     class MySettings : Settings
     {
         public MySettings()
-            :base(bindingPath: "")
+            :base(bindingPath: "") 
         {}
-
+        
         public TimeSpan MyTimeSpan => Get<TimeSpan>();
+
+        public string Key => Get<string>();
     }
 }
