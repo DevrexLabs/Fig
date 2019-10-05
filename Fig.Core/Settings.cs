@@ -107,6 +107,12 @@ namespace Fig
             // Do this outside the lock to avoid deadlocks
             changedProperties.ForEach(NotifyPropertyChanged);
         }
+
+        /// <summary>
+        /// Replace all occurrences of the pattern ${KEY} within the provided template
+        /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Configuration
+        /// </summary>
+        public string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Configuration);
         
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
@@ -269,7 +275,7 @@ namespace Fig
                     shouldNotify = true;
                 }
             }
-            NotifyPropertyChanged(key);
+            if (shouldNotify) NotifyPropertyChanged(key);
         }
 
         /// <summary>

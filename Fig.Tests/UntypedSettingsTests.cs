@@ -6,34 +6,74 @@ namespace Fig.Test
 {
     public class UntypedSettingsTests
     {
-        [Test]
-        public void UntypedAccessDemo()
+        private Settings _settings;
+
+        [SetUp]
+        public void Setup()
         {
-            //todo: refactor, break out into setup and 3 different tests for each assert
-            var settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
-                    ["CoffeeRefillInterval"] = "00:05:00"
+                    ["CoffeeRefillInterval"] = "00:05:00",
+                    ["A"] = "A",
+                    ["B"] = "B",
+                    ["b:prod"] = "b:prod",
+                    ["a.b"] = "a.b",
+                    ["a.b:test"] = "a.b:test",
                 })
                 .Build();
-    
+        }
+
+        [TestCase("${A}", ExpectedResult = "A", Description = "Single key")]
+        [TestCase("${A}${A}", ExpectedResult = "AA", Description = "Duplicate keys")]
+        [TestCase("${A}${D}", ExpectedResult = "A", Description = "Mixed present and missing")]
+        [TestCase("${A}${B}", ExpectedResult = "AB", Description = "Multiple keys")]
+        [TestCase("${B:prod}", ExpectedResult = "b:prod", Description = "explicit configuration")]
+        [TestCase("bumble ${B:prod}", ExpectedResult = "bumble b:prod", Description = "Mixed content")]
+        [TestCase("${a.b}", ExpectedResult = "a.b", Description = "Composite keys")]
+        [TestCase("${a.b:test}", ExpectedResult = "a.b:test", Description = "Composite key with configuration selector")]
+        public string CanExpandVariables(string template)
+        {
+            return _settings.ExpandVariables(template);
+        }
+
+        [TestCase]
+        public void KeyWithExplicitConfigurationTakesPrecedenceOverCurrentConfiguration()
+        {
+            //set current configuration to "fish"
+            _settings.SetConfiguration("fish");
+            
+            //but explicitly ask for "test"
+            Assert.AreEqual("a.b:test", _settings.ExpandVariables("${a.b:test}"), "_settings.ExpandVariables(key)");
+            
+            Assert.AreEqual("a.b:test", _settings.Get("a.b:test"), "_settings.Get(key)");
+        }
+
+        [Test]
+        public void MissingKeyAndNoDefaultThrowsException()
+        {
+            Assert.Throws<KeyNotFoundException>(
+                () => _settings.Get("ouch"));            
+        }
+        
+        [Test]
+        public void SuppliedSettingTakesPrecedenceOverDefault()
+        {
             var key = "CoffeeRefillInterval";
             
             //Notice how the return type is derived from the default callback
-            var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(20));
+            var refillInterval = _settings.Get(key, () => TimeSpan.FromMinutes(20));
             
-            //Expect he value from the dictionary, not the default
+            //Expect the value from the dictionary, not the default
             Assert.AreEqual(TimeSpan.FromMinutes(5), refillInterval);
+        }
 
-            //no key, no default. BOOM!
-            Assert.Throws<KeyNotFoundException>(
-                () => refillInterval = settings.Get<TimeSpan>(key + "ouch"));
-            
-            //key missing, default kicks in
-            var defaultTimespan = TimeSpan.FromSeconds(42);
-            refillInterval = settings.Get<TimeSpan>(key + "ouch", () => defaultTimespan);
-            Assert.AreEqual(defaultTimespan, refillInterval);
-
+        [Test]
+        public void DefaultKicksInWhenSettingsIsMissing()
+        {
+            var expected = "foo";
+            var actual = _settings.Get("missing", () => expected);
+            Assert.AreEqual(actual, expected);
         }
     }
 }
