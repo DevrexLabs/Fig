@@ -25,12 +25,18 @@ namespace Fig.Test
                 ["ExampleSettings.RequiredInt"] = "200",
                 ["ExampleSettings.MyReadonlyIntProperty"] = "600",
                 ["ExampleSettings.MyTimeSpan"] = "00:20:00",
+
                 ["MyTimeSpan"]  = "00:42:00",
+
                 ["Key"] = "Key",
                 ["Key:PROD"] = "PROD",
                 ["Key:TEST"] = "TEST",
                 ["Key:PROD2"] = "PROD",
-                ["Config"] = "PROD"
+
+                ["env"] = "staging",
+                ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
+
+                ["ExampleSettings.MyTimeSpan:FAIL"] = "not a timespan"
             };
             
             _settings.SettingsDictionary = new CompositeSettingsDictionary();
@@ -58,9 +64,7 @@ namespace Fig.Test
         [Test]
         public void CanReadDefault()
         {
-            _settingsDictionary.Remove("ExampleSettings.MyIntProperty");
-            _settings.PreLoad();
-			Assert.AreEqual(42, _settings.MyIntProperty);
+			Assert.AreEqual(1234, _settings.HasDefault);
 		}
 
         [Test]
@@ -73,10 +77,11 @@ namespace Fig.Test
         [Test]
         public void MissingPropertyWithoutDefaultFailsValidation()
         {
-            bool removed = _settingsDictionary.Remove("ExampleSettings.RequiredInt");
-            Assert.IsTrue(removed);
+            var builder = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary);
+                
             Assert.Throws<ConfigurationException>(() => { 
-                _settings.PreLoad();
+                    builder.Build<UnresolvedPropertySettings>();
             });
         }
 
@@ -106,7 +111,7 @@ namespace Fig.Test
         }
         
         [Test]
-        public void ConfigurationIsRespected()
+        public void EnvironmentIsRespected()
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
@@ -115,38 +120,82 @@ namespace Fig.Test
             //No Configuration, should return unqualified setting
             Assert.AreEqual("Key", settings.Get<string>("Key"));
             
-            settings.SetConfiguration("prod");
+            settings.SetEnvironment("prod");
             Assert.AreEqual("PROD", settings.Get<string>("Key"));
 
-            settings.SetConfiguration("test");
+            settings.SetEnvironment("test");
             Assert.AreEqual("TEST", settings.Get<string>("Key"));
         }
-        
-        public void ConfigurationChangeFiresPropertyChangeEvents()
+
+        [Test]
+        public void InitialEnvironment()
+        {
+            var dictionary = new SettingsDictionary()
+            {
+                ["env"] = "staging",
+                ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
+                ["ExampleSettings.MyTimeSpan"] = "00:10:00",
+                ["ExampleSettings.RequiredInt"] = "200",
+                ["ExampleSettings.MyReadonlyIntProperty"] = "200"
+            };
+            
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(dictionary)
+                .SetEnvironment("${ENV}")
+                .Build<ExampleSettings>();
+            
+            Assert.AreEqual(TimeSpan.FromMinutes(15), settings.MyTimeSpan);
+            Assert.AreEqual("staging", settings.Environment);
+        }
+
+        [Test]
+        public void EnvironmentSwitchRollsback()
+        {
+            int propertiesChanged = 0;
+            _settings.PropertyChanged += (sender, args) => propertiesChanged++;
+            
+            Assert.Throws<ConfigurationException>(
+                () => _settings.SetEnvironment("fail")
+            );
+            
+            //Nothing should have changed
+            Assert.AreEqual("",_settings.Environment);
+            Assert.AreEqual(0, propertiesChanged);
+        }
+
+        [Test]
+        public void EnvironmentChangeFiresPropertyChangeEvents()
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build<MySettings>();
 
+            //Set up callback to record all property change notifications
             var propertyChangeNotifications = new List<string>();
             settings.PropertyChanged += (sender, args) => propertyChangeNotifications.Add(args.PropertyName);
            
+            //Initial value with no Environment set
             Assert.AreEqual("Key", settings.Key);
 
-            settings.SetConfiguration("prod");
-            
+            //switching environment changes a 
+            settings.SetEnvironment("prod");
+            Assert.AreEqual("PROD", settings.Key);
             Assert.AreEqual("Key", propertyChangeNotifications.Single());
             
-            //changing config but no properties will change
-            settings.SetConfiguration("prod2");
-            
+            //changing env but no properties will change
+            settings.SetEnvironment("prod2");
+            Assert.AreEqual("PROD", settings.Key);
             //no changes so we shouldn't have received additional events
             Assert.AreEqual("Key", propertyChangeNotifications.Single());
-            
         }
 
     }
 
+    class UnresolvedPropertySettings : Settings
+    {
+        public int Foo => Get<int>();
+    }
+    
     class MySettings : Settings
     {
         public MySettings()

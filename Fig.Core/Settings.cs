@@ -12,12 +12,12 @@ namespace Fig
     /// </summary>
     public class Settings : INotifyPropertyChanged
     {
-        
+
         /// <summary>
         /// Current in-memory property values
         /// </summary>
         private Dictionary<string, CacheEntry> _cache;
-
+        
         /// <summary>
         /// The actual data as multiple layers of key value pairs
         /// </summary>
@@ -50,6 +50,14 @@ namespace Fig
                 OriginalValue = value;
                 CurrentValue = value;
             }
+
+            public bool Update(object val)
+            {
+                if (CurrentValue == val) return false;
+                
+                CurrentValue = val;
+                return true;
+            }
         }
 
         public Settings(string bindingPath = null, IStringConverter converter = null)
@@ -58,6 +66,7 @@ namespace Fig
             var comparer = StringComparer.InvariantCultureIgnoreCase;
             _cache = new Dictionary<string, CacheEntry>(comparer);
             _bindingPath = bindingPath ?? GetBindingPath();
+            Environment = "";
         }
 
         private string GetBindingPath()
@@ -81,38 +90,47 @@ namespace Fig
         /// The current environment, used as a suffix when looking up keys, will take precedence over
         /// key with same name without suffix. The suffix does not include the : separator.
         /// </summary>
-        public string Configuration { get; private set; }
+        public string Environment { get; internal set; }
 
         /// <summary>
-        /// Change the configuration forcing a reload and possible property change notifications
+        /// Change the current environment forcing a reload and possible property change notifications
         /// </summary>
-        public void SetConfiguration(string configurationName)
+        public void SetEnvironment(string environmentName)
         {
-            if (configurationName is null) throw new ArgumentNullException();
-            if (configurationName == Configuration) return;
-            
-            var  changedProperties = new List<string>();
-            lock (this)
+            var oldEnvironment = Environment;
+            var oldCache = _cache;
+            try
             {
-                Configuration = configurationName;
-                var oldCache = _cache;
+                if (environmentName is null) throw new ArgumentNullException();
+                if (environmentName == Environment) return;
                 
-                PreLoad(); //will create a new cache with new values based on the new configuration
-                
-                changedProperties.AddRange( oldCache
-                    .Where(oc => _cache[oc.Key].OriginalValue != oc.Value.CurrentValue)
-                    .Select(oc => oc.Key));
-            }
             
-            // Do this outside the lock to avoid deadlocks
-            changedProperties.ForEach(NotifyPropertyChanged);
+                List<string> changedProperties = null;
+            
+                lock (this)
+                {
+                    Environment = environmentName;
+                    PreLoad();
+                    changedProperties = oldCache.Keys
+                        .Where(key => !oldCache[key].CurrentValue.Equals(_cache[key].CurrentValue))
+                        .ToList();
+                }
+                // Do this outside the lock to avoid deadlocks
+                changedProperties.ForEach(NotifyPropertyChanged);
+            }
+            catch (Exception ex)
+            {
+                Environment = oldEnvironment;
+                _cache = oldCache;
+                throw;
+            }
         }
 
         /// <summary>
-        /// Replace all occurrences of the pattern ${KEY} within the provided template
-        /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Configuration
+        /// Replace all occurrences of the pattern ${key} within the provided template
+        /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Environment
         /// </summary>
-        public string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Configuration);
+        public string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Environment);
         
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
@@ -152,7 +170,7 @@ namespace Fig
         public T Get<T>(string key, Func<T> @default = null)
         {
             var found = SettingsDictionary
-                .TryGetValue(key, Configuration, out var result);
+                .TryGetValue(key, Environment, out var result);
             if (found) return _converter.Convert<T>(result);
             else if (@default != null) return @default();
             else throw new KeyNotFoundException();
@@ -205,7 +223,7 @@ namespace Fig
                 }
 
                 key = GetKey(key, propertyName);
-                if (!SettingsDictionary.TryGetValue(key, Configuration, out string value))
+                if (!SettingsDictionary.TryGetValue(key, Environment, out string value))
                 {
                     if (@default == null) throw new KeyNotFoundException(key);
                     return @default.Invoke();
@@ -213,9 +231,6 @@ namespace Fig
 
                 //TODO: This could throw, deal with it
                 var result = _converter.Convert(value, propertyType);
-
-                 _cache[propertyName] = new CacheEntry(result);
-
                 return result;
             }
         }
@@ -226,28 +241,39 @@ namespace Fig
         /// <exception cref="ConfigurationException"></exception>
         internal void PreLoad()
         {
-            _cache = new Dictionary<string, CacheEntry>();
+            _cache = new Dictionary<string, CacheEntry>(StringComparer.InvariantCultureIgnoreCase);
             var errors = new List<string>();
-
             foreach(var propertyInfo in GetType().GetProperties())
             {
                 try
                 {
+                    var name = propertyInfo.Name;
+                    if (name == nameof(Environment)) continue;
+
                     var getter = propertyInfo.GetGetMethod();
                     if (getter == null) continue;
-                    
+
                     var val = getter.Invoke(this, Array.Empty<object>());
-                    _cache[propertyInfo.Name] = new CacheEntry(val);
+                    _cache[name] = new CacheEntry(val);
                 }
                 catch (TargetInvocationException tie)
                 {
-                    if (tie.InnerException is KeyNotFoundException knf)
-                        errors.Add("Missing: " + knf.Message);
-                    else throw new Exception("Unexpected inner exception", tie.InnerException);
+                    switch (tie.InnerException)
+                    {
+                        case KeyNotFoundException _:
+                            errors.Add(propertyInfo.Name + " not found");
+                            break;
+                        case FormatException fe:
+                            errors.Add("Can't parse " + propertyInfo.Name);
+                            break;
+                        default:
+                            errors.Add(propertyInfo.Name + " failed," + tie.InnerException?.Message);
+                            break;
+                    }
                 }
-                catch(NotSupportedException)
+                catch (Exception ex)
                 {
-                    errors.Add("Can't parse: " + propertyInfo.Name);
+                    errors.Add(propertyInfo.Name + " failed, " + ex.Message);
                 }
             }
             if (errors.Any()) throw new ConfigurationException(errors);
@@ -300,5 +326,4 @@ namespace Fig
             }
         }
     }
-
 }
