@@ -11,7 +11,7 @@
     <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
     <PackageReleaseNotes>initial beta release, please report any bugs</PackageReleaseNotes>
     <Copyright>Robert Friberg et al</Copyright>
-    <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>

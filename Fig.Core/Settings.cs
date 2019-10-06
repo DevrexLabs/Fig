@@ -118,7 +118,7 @@ namespace Fig
                 // Do this outside the lock to avoid deadlocks
                 changedProperties.ForEach(NotifyPropertyChanged);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Environment = oldEnvironment;
                 _cache = oldCache;

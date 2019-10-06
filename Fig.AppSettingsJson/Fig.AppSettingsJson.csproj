@@ -9,7 +9,7 @@
         <Title>Fig.AppSettingsJson</Title>
         <Description>Fig configuration source provider for appSettins.json files</Description>
         <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+        <PackageLicenseUrl></PackageLicenseUrl>
         <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
     </PropertyGroup>
 

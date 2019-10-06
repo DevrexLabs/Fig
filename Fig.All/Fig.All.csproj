@@ -8,7 +8,7 @@
         <Description>All of the libraries in a single nuget package for your convenience</Description>
         <Copyright>Robert Friberg et al</Copyright>
         <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+        <PackageLicenseUrl></PackageLicenseUrl>
         <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
