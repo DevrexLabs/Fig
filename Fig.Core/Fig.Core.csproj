@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
     <Copyright>Robert Friberg et al</Copyright>
-    <PackageLicenseUrl>https://github.com/rofr/fig</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />

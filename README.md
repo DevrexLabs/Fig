@@ -1,51 +1,46 @@
 ﻿
-
+[![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig)
 ## Fig
 
-Hey dotnet devs, here's a nice little library that helps you
-access configuration data in a structured and strongly typed manner.
+A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it 
+in a structured, type safe manner.
 
 Do you have code like the following spread around your code base?
 
-```csharp
-   var settingString = ConfigurationManager.AppSettings["CoffeeRefillIntervalInMinutes"] ?? "100";
+```c#
+   var settingString = ConfigurationManager.AppSettings["CoffeeRefillIntervalInMinutes"];
    if (settingString == null) settingString = "20";
    var coffeeInterval = TimeSpan.FromMinutes(Int32.Parse(setting));
 ```
 
 Fig can help you keep this nice and clean:
 
-
-```csharp
+```c#
   var settings = new SettingsBuilder()
     .UseAppSettingsXml()
-    .Build<Settings>();
+    .Build();
     
-
-  //get a value by key and convert to your target type
-  //a KeyNotFoundException is thrown if key is missing
-
   var key = "CoffeeRefillInterval";
   var refillInterval = settings.Get<TimeSpan>(key);
 
-
-  // if key is optional, provide a default
-  // notice how the return type is derived from the default expression
+  // provide a default for optional settings
   var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));   
-
 ```
+## Using custom types
 
-If you prefer a strongly typed class there are 2 options: either bind to a POCO
-or inherit from Fig.Settings class. Here is the inheritance approach:
+If you prefer a typed class there are 2 options:
+* inherit from `Fig.Settings`
+* Bind to a POCO (work in progress)
 
-```csharp
+Here is the first approach:
+
+```c#
    public class CoffeeShopSettings : Settings
    {
       //with default
-      public TimeSpan CoffeeRefillInterval 
-        => Get<TimeSpan>(@default: () => TimeSpan.FromMinutes(10)); 
+      public TimeSpan CoffeeRefillInterval => Get(() => TimeSpan.FromMinutes(10)); 
       
-      //no default, but writeable!
+      //Read and write
       public bool EspressoMachineIsEnabled
       {
          get => Get<bool>();
@@ -53,49 +48,73 @@ or inherit from Fig.Settings class. Here is the inheritance approach:
       }
    }
 
-   //Now pass the type to the Build method
+   //Use the SettingsBuilder to build an instance
    var settings = new SettingsBuilder()
-    .AppSettingsXmlProvider()
+    .UseAppSettingsXml()
     .Build<CoffeeShopSettings>();
    
    Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
 ```
 
+## Binding to POCOs
 If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
-(not yet implemented)
+(work in progress)
 
-That's pretty useful as it is but wait, there's more! You can modify properties
-at runtime and respond to changes by subscribing to the `PropertyChanged` event.
+## Binding to multiple objects
+In a larger project you don't want all the settings in the same class.
+In this case save a reference to the `SettingsBuilder` and use it multiple times:
 
-```csharp
+```c#
+var builder = new SettingsBuilder().UseAppSettingsXml();
+var dbSettings = builder.Build<DbSettings>();
+var networkSettings = builder.Build<NetworkSettings>();
+```
 
+## Change notifications
+The `Settings` class implements `INotifyPropertyChanged`. React to configuration changes
+by subscribing to the `PropertyChanged` event.
+
+```c#
    settings.PropertyChanged += (sender,args) 
         => Console.WriteLine(args.PropertyName + " changed!");
 
    settings.EspressoMachineIsEnabled = false;
 ```
 
-the config looks like this:
+## Configuration sources
+* web.config / app.config
+* appSettings.json
+* ini-files
+* environment variables
+* command line / string array
+* Bring your own by implementing `ISettingsSource`
 
+Sources provide key value pairs `(string,string)`. 
+Each source is described below with an example.
+
+## Web.config / App.config
+Given this xml configuration:
 ```xml
    <appSettings>
       <add key="CoffeeShopSettings.espressomachineenabled" value="true"/>
       <add key="CoffeeShopSettings.CoffeeRefillInterval" value="00:42:00"/>
    </appSettings>
+   <connectionStrings>
+    <add name="mydb"
+      connectionString="Data Source=.; Initial Catalog=mydb;Integrated Security=true"
+      providerName="System.Data.SqlClient"/>
+   </connectionStrings>
+```
+the default behavior will yield these keys:
+```
+CoffeeShopSettings.espressomachineenabled
+CoffeeShopSettings.CoffeeRefillInterval
+ConnectionStrings.mydb.connectionString
+ConnectionStrings.mydb.providerName
 ```
 
-For types that derive from Settings, the class name is used as prefix for the key.
-This is the default and can be overridden. For untyped access using the Settings class,
-the default is no prefix which can also be overriden.
-
-But what about appsettings.json for .NET Core? No worries, we've
-got you covered:
-
-```csharp
-   var settings = new SettingsBuilder()
-    .UseAppSettingsJson("appsettings.json")
-    .Build<Settings>();
-```
+## appSettings.json
+This content:
 ```json
 {
   "EspressoMachineEnabled" : true,
@@ -113,6 +132,80 @@ got you covered:
   "AllowedHosts": "*"
 }
 ```
+will be flattened to the following keys:
+```
+EspressoMachineEnabled
+CoffeeRefillInterval
+Timeout
+ConnectionStrings.DefaultConnection
+Servers.0
+Servers.1
+Logging.LogLevel.Default
+AllowedHosts
+```
+## Ini files
+This input:
+```
+keya=value
+keya.keyb=value
+[Network]
+ip=10.0.0.3
+[Datasource.A]
+name=value
+connectionstring=value
+```
+yields these keys:
+```
+keya
+keya.keyb
+Network.ip
+Datasource.A.name
+Datasource.A.connectionstring
+```
+
+# Combining sources
+Use the `SettingsBuilder` to add sources in order of precedence. 
+Settings in above layers override settings with the same key in
+lower layers.
+
+```c#
+   var settings = new SettingsBuilder()
+    .UseCommandLine(args)
+    .UseEnvironmentVariables()
+    .UseAppSettingsJson("appSettings.${ENV}.json, optional:true)
+    .UseAppSettingsJson("appSettings.json")
+    .Build<Settings>();
+```
+Notice the environment specific json file. The variable `${ENV}`
+will be looked up based on what has been added so far,
+environment variables and command line.
+
+## Dealing with multiple environments
+Normally you use different settings in different environments such as test, production, staging, dev, etc
+In the previous section we used variable expansion to include an environment specific file json file.
+
+A different approach is to qualify keys with an environment name suffix.
+Given these keys:
+```
+   redis.endpoint=localhost:6379
+   redis.endpoint:PROD=redis.mydomain.net:6379
+   redis.endpoint:STAGING=10.0.0.42:6379
+   ENV=PROD
+```
+set the environment on the builder:
+```c#
+   var settings = new SettingsBuilder()
+       .UseCommandLine()
+       .UseEnvironmentVariables()
+       .SetEnvironment("${ENV}") //must be provided above
+       .UseIniFile("settings.ini")
+       .Build();             
+```
+Or directly on the settings instance:
+```c#
+   _settings.SetEnvironment("STAGING");
+   endpoint = _settings.Get("redis.endpoint"); // 10.0.0.42:6379
+```
 
 ## Install from nuget
 ```bash
@@ -129,38 +222,30 @@ Install-Package Fig.AppSettingsXml
 Install-Package Fig.AppSettingsJson
 
 ```
+## Creating custom sources
+* Inherit from `SettingsSource` and override `GetSettings()` 
+* Create an extension method for the `SettingsBuilder`
 
-## Features
-* Strongly typed and automatic type conversion
-* Default values
-* Validation - throw if key is missing
-* Update runtime values (just add a setter)
-* INotifyPropertyChanged support
-* Case-insensitive keys
-* Provider for App.Config / Web.config
-* Provider for appsettings.json
-* Provider for INI-files
-* Provider for Environment variables
-* Provider for command line args
-* Named configuration support (Debug, Release, etc) with live swap (incomplete)
-* Builder pattern to for flexible configuration
-* Combine providers into layers
-* ConnectionStrings from xml config included
+```c#
+public class MySource : SettingsSource
+{
+   protected override IEnumerable<(string, string)> GetSettings()
+   {
+       yield return ("key", "value");
+   }
+}
 
+public static class MySettingsBuilderExtensions
+{
+   public static SettingsBuilder UseMySource(this SettingsBuilder builder)
+   {
+      var mySource = new MySource();
+      var dictionary = mySource.ToSettingsDictionary();
+      builder.Add(dictionary);
+      return builder;
+   }
+}
+``` 
 ## Contributing
 Contributions are welcome! Check out existing issues, or create a new one,
 and then we discuss details in the comments.
-
-## Features to do or consider, in no particular order
-* Write more tests!
-* Write documentation (just use markdown in the docs folder)
-* Encryption - encrypt with a tool, decrypt with a key provided at runime (env var, constructor arg)
-* provider bootstrapping, choose at startup using heuristics
-* add more tests
-* custom converters - if we have a custom type not recognized by the TypeConverter
-* Custom validators - say we have a string list of IP adresses, we might want to parse them or even ensure they are resolvable
-* array values, GetArray() or array type on the property
-* Diagnostics: which provider did a value come from?
-* Dump values (INI, text)
-* TOML 
-* YAML, hell no :)

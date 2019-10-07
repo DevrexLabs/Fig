@@ -25,5 +25,8 @@ namespace Fig.Test
         
         public TimeSpan MyTimeSpan 
             => Get<TimeSpan>();
+        
+        public int HasDefault
+            => Get(() => 1234);
     }
 }

@@ -60,7 +60,6 @@ namespace Fig.AppSettingsXml
                 yield return (key, _nameValueCollection.Get(key));
             }
 
-            //TODO: Give this some more thought, should have same key scheme as AppSettingsJson
             if (IncludeConnectionStrings)
             {
                 var cs = _connectionStrings;
