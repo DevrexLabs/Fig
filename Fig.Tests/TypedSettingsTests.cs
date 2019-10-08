@@ -39,9 +39,7 @@ namespace Fig.Test
                 })
                 .Build();
 
-            TestClass testClass;
-
-            Assert.Throws<KeyNotFoundException>(() => testClass = this._settings.Bind<TestClass>());
+            Assert.Throws<KeyNotFoundException>(() => this._settings.Bind<TestClass>());
         }
 
         [Test]
