@@ -2,7 +2,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig)
 ## Fig
 
-A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it 
+A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it
 in a structured, type safe manner.
 
 Do you have code like the following spread around your code base?
@@ -19,12 +19,12 @@ Fig can help you keep this nice and clean:
   var settings = new SettingsBuilder()
     .UseAppSettingsXml()
     .Build();
-    
+
   var key = "CoffeeRefillInterval";
   var refillInterval = settings.Get<TimeSpan>(key);
 
   // provide a default for optional settings
-  var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));   
+  var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));
 ```
 ## Using custom types
 
@@ -38,8 +38,8 @@ Here is the first approach:
    public class CoffeeShopSettings : Settings
    {
       //with default
-      public TimeSpan CoffeeRefillInterval => Get(() => TimeSpan.FromMinutes(10)); 
-      
+      public TimeSpan CoffeeRefillInterval => Get(() => TimeSpan.FromMinutes(10));
+
       //Read and write
       public bool EspressoMachineIsEnabled
       {
@@ -52,13 +52,32 @@ Here is the first approach:
    var settings = new SettingsBuilder()
     .UseAppSettingsXml()
     .Build<CoffeeShopSettings>();
-   
+
    Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
 ```
 
 ## Binding to POCOs
 If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
 (work in progress)
+
+```c#
+   public class CoffeeShopSettings
+   {
+      //with default
+      public TimeSpan CoffeeRefillInterval { get; set; } = TimeSpan.FromMinutes(10);
+
+      //Read and write
+      public bool EspressoMachineIsEnabled { get; set; }
+   }
+
+   //Use the SettingsBuilder to build an instance
+   var settings = new SettingsBuilder()
+      .UseAppSettingsXml()
+      .Build()
+      .Bind<CoffeeShopSettings>();
+
+   Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
+```
 
 ## Binding to multiple objects
 In a larger project you don't want all the settings in the same class.
