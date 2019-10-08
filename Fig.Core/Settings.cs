@@ -135,6 +135,9 @@ namespace Fig
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
         /// </summary>
+        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
+        /// <param name="prefix">Defaults typeof(T).Name</param>
+        /// <typeparam name="T"></typeparam>
         public T Bind<T>(bool requireAll = true, string prefix = null) where T : new()
         {
             var t = new T();
@@ -149,16 +152,46 @@ namespace Fig
         /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
         /// <param name="prefix">Defaults typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public void Bind<T>(T target, bool requireAll = true, string prefix = null)
+        public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
-            var props = typeof(T).GetProperties();
+            prefix = ((prefix ?? String.Empty).Trim() == String.Empty)
+                ? typeof(T).Name
+                : prefix;
+
+            var props = typeof(T)
+                .GetProperties()
+                .Where(p => !(p.GetSetMethod() is null));
+
             foreach (var prop in props)
             {
-                if (SettingsDictionary.TryGetValue(prop.Name, Environment, out var result) || requireAll)
+                var type = prop.PropertyType;
+                var name = $"{prefix}.{prop.Name}";
+                object value = null;
+
+                if (!type.IsPrimitive
+                    && !type.IsEnum
+                    && type != typeof(string)
+                    && type != typeof(decimal)
+                    && type != typeof(DateTime))
                 {
+                    value = this.GetType().GetMethods()
+                        .Where(x => x.Name == "Bind")
+                        .Select(x => new { M = x, P = x.GetParameters() })
+                        .Where(x => x.P.Length == 2)
+                        .Select(x => x.M)
+                        .FirstOrDefault()?
+                        .MakeGenericMethod(type)?
+                        .Invoke(this, new object[] { requireAll, name });
+                }
+                else if (SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+                {
+                    value = Get(type, name);
+                }
+
+                if (!(value is null)) {
                     prop.SetValue(
                         target,
-                        Get(prop.PropertyType, prop.Name)
+                        value
                     );
                 }
 
