@@ -42,10 +42,10 @@ namespace Fig.Test
         {
             //set current configuration to "fish"
             _settings.SetEnvironment("fish");
-            
+
             //but explicitly ask for "test"
             Assert.AreEqual("a.b:test", _settings.ExpandVariables("${a.b:test}"), "_settings.ExpandVariables(key)");
-            
+
             Assert.AreEqual("a.b:test", _settings.Get("a.b:test"), "_settings.Get(key)");
         }
 
@@ -53,17 +53,17 @@ namespace Fig.Test
         public void MissingKeyAndNoDefaultThrowsException()
         {
             Assert.Throws<KeyNotFoundException>(
-                () => _settings.Get("ouch"));            
+                () => _settings.Get("ouch"));
         }
-        
+
         [Test]
         public void SuppliedSettingTakesPrecedenceOverDefault()
         {
             var key = "CoffeeRefillInterval";
-            
+
             //Notice how the return type is derived from the default callback
             var refillInterval = _settings.Get(key, () => TimeSpan.FromMinutes(20));
-            
+
             //Expect the value from the dictionary, not the default
             Assert.AreEqual(TimeSpan.FromMinutes(5), refillInterval);
         }

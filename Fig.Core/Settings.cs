@@ -17,7 +17,7 @@ namespace Fig
         /// Current in-memory property values
         /// </summary>
         private Dictionary<string, CacheEntry> _cache;
-        
+
         /// <summary>
         /// The actual data as multiple layers of key value pairs
         /// </summary>
@@ -31,7 +31,7 @@ namespace Fig
         /// <summary>
         /// Path to the node in the tree to bind to for example:
         /// Given keys A.B.C and A.B.D, a binding path of A.B
-        /// will bind the values of A.B.C and A.B.D to properties C and D of this type 
+        /// will bind the values of A.B.C and A.B.D to properties C and D of this type
         /// </summary>
         private string _bindingPath;
 
@@ -42,7 +42,7 @@ namespace Fig
             /// Not used
             /// </summary>
             public readonly object OriginalValue;
-            
+
             public object CurrentValue;
 
             public CacheEntry(object value)
@@ -54,7 +54,7 @@ namespace Fig
             public bool Update(object val)
             {
                 if (CurrentValue == val) return false;
-                
+
                 CurrentValue = val;
                 return true;
             }
@@ -73,15 +73,15 @@ namespace Fig
         {
             //Untyped Settings class should bind to the root of the tree
             if (GetType() == typeof(Settings)) return "";
-            
+
             //All else default to the name of the class excluding namespace
             else return GetType().Name;
         }
 
-       
-        internal Settings(CompositeSettingsDictionary settingsDictionary, 
+
+        internal Settings(CompositeSettingsDictionary settingsDictionary,
             string bindingPath = null, IStringConverter converter = null)
-            :this(bindingPath, converter)
+            : this(bindingPath, converter)
         {
             SettingsDictionary = settingsDictionary;
         }
@@ -103,10 +103,10 @@ namespace Fig
             {
                 if (environmentName is null) throw new ArgumentNullException();
                 if (environmentName == Environment) return;
-                
-            
+
+
                 List<string> changedProperties = null;
-            
+
                 lock (this)
                 {
                     Environment = environmentName;
@@ -131,10 +131,13 @@ namespace Fig
         /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Environment
         /// </summary>
         public string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Environment);
-        
+
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
         /// </summary>
+        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
+        /// <param name="prefix">Defaults typeof(T).Name</param>
+        /// <typeparam name="T"></typeparam>
         public T Bind<T>(bool requireAll = true, string prefix = null) where T : new()
         {
             var t = new T();
@@ -143,15 +146,53 @@ namespace Fig
         }
 
         /// <summary>
-        /// 
+        /// Populate the properties on a provided Type that match the keys in the SettingsDictionary.
         /// </summary>
         /// <param name="target">The object to set properties on</param>
         /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
         /// <param name="prefix">Defaults typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public void Bind<T>(T target, bool requireAll = true, string prefix = null)
+        public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
-            throw new NotImplementedException();
+            prefix = ((prefix ?? String.Empty).Trim() == String.Empty)
+                ? typeof(T).Name
+                : prefix;
+
+            var props = typeof(T)
+                .GetProperties()
+                .Where(p => !(p.GetSetMethod() is null));
+
+            foreach (var prop in props)
+            {
+                var type = prop.PropertyType;
+                var name = $"{prefix}.{prop.Name}";
+                object value = null;
+
+                if (!type.IsPrimitive
+                    && !type.IsEnum
+                    && type != typeof(string)
+                    && type != typeof(decimal)
+                    && type != typeof(DateTime))
+                {
+                    value = this.GetType().GetMethods()
+                        .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 2)
+                        .FirstOrDefault()?
+                        .MakeGenericMethod(type)?
+                        .Invoke(this, new object[] { requireAll, name });
+                }
+                else if (SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+                {
+                    value = Get(type, name);
+                }
+
+                if (!(value is null)) {
+                    prop.SetValue(
+                        target,
+                        value
+                    );
+                }
+
+            }
         }
 
         /// <summary>
@@ -186,8 +227,8 @@ namespace Fig
         /// <returns></returns>
         protected T Get<T>(string key = null, [CallerMemberName] string propertyName = null, Func<T> @default = null)
         {
-            if (@default is null) return (T) Get(typeof(T), propertyName);
-            else return (T) Get(typeof(T), propertyName, key,() => @default());
+            if (@default is null) return (T)Get(typeof(T), propertyName);
+            else return (T)Get(typeof(T), propertyName, key, () => @default());
         }
 
         /// <summary>
@@ -200,7 +241,7 @@ namespace Fig
         /// <returns></returns>
         protected T Get<T>(Func<T> @default, string key = null, [CallerMemberName] string propertyName = null)
         {
-            return (T) Get(typeof(T), propertyName, key, () => @default());
+            return (T)Get(typeof(T), propertyName, key, () => @default());
         }
 
         private string GetKey(string key, string propertyName)
@@ -209,7 +250,7 @@ namespace Fig
             if (_bindingPath.Length > 0) key = _bindingPath + "." + key;
             return key;
         }
-        
+
         /// <summary>
         /// This is where the actual retrieval, conversion and caching happens
         /// </summary>
@@ -243,7 +284,7 @@ namespace Fig
         {
             _cache = new Dictionary<string, CacheEntry>(StringComparer.InvariantCultureIgnoreCase);
             var errors = new List<string>();
-            foreach(var propertyInfo in GetType().GetProperties())
+            foreach (var propertyInfo in GetType().GetProperties())
             {
                 try
                 {
@@ -287,8 +328,8 @@ namespace Fig
         /// <param name="propertyName"></param>
         protected void Set<T>(T value, [CallerMemberName] string propertyName = null)
         {
-            var key =  propertyName ?? throw new ArgumentException(nameof(propertyName));
-            
+            var key = propertyName ?? throw new ArgumentException(nameof(propertyName));
+
             bool shouldNotify = false;
 
             lock (this)
