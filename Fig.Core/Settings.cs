@@ -175,10 +175,7 @@ namespace Fig
                     && type != typeof(DateTime))
                 {
                     value = this.GetType().GetMethods()
-                        .Where(x => x.Name == "Bind")
-                        .Select(x => new { M = x, P = x.GetParameters() })
-                        .Where(x => x.P.Length == 2)
-                        .Select(x => x.M)
+                        .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 2)
                         .FirstOrDefault()?
                         .MakeGenericMethod(type)?
                         .Invoke(this, new object[] { requireAll, name });
