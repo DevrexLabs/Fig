@@ -60,6 +60,17 @@ namespace Fig
             }
         }
 
+        private class BindResult<T>
+        {
+            public BindResult(List<string> errors, T result)
+            {
+                Errors = errors;
+                Result = result;
+            }
+            public List<string> Errors { get; }
+            public T Result { get; }
+        }
+
         public Settings(string bindingPath = null, IStringConverter converter = null)
         {
             _converter = converter ?? new InvariantStringConverter();
@@ -140,9 +151,11 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public T Bind<T>(bool requireAll = true, string prefix = null) where T : new()
         {
-            var t = new T();
-            Bind(t, requireAll, prefix);
-            return t;
+            var result = GetBindResult<T>(requireAll, prefix);
+
+            if (result.Errors.Any()) throw new ConfigurationException(result.Errors);
+
+            return result.Result;
         }
 
         /// <summary>
@@ -154,44 +167,103 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
+            var errors = new List<string>();
+
+            Bind(target, requireAll, prefix, false, errors);
+
+            if (errors.Any()) throw new ConfigurationException(errors);
+        }
+
+        private BindResult<T> GetBindResult<T>(bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        {
+            var t = new T();
+            Bind(t, requireAll, prefix, preload, errors);
+            return new BindResult<T>(errors, t);
+        }
+
+        internal void Bind<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        {
+            errors = errors ?? new List<string>();
+
             prefix = ((prefix ?? String.Empty).Trim() == String.Empty)
                 ? typeof(T).Name
                 : prefix;
 
-            var props = typeof(T)
-                .GetProperties()
-                .Where(p => !(p.GetSetMethod() is null));
-
-            foreach (var prop in props)
+            foreach (var prop in typeof(T).GetProperties())
             {
-                var type = prop.PropertyType;
-                var name = $"{prefix}.{prop.Name}";
-                object value = null;
-
-                if (!type.IsPrimitive
-                    && !type.IsEnum
-                    && type != typeof(string)
-                    && type != typeof(decimal)
-                    && type != typeof(DateTime))
+                try
                 {
-                    value = this.GetType().GetMethods()
-                        .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 2)
-                        .FirstOrDefault()?
-                        .MakeGenericMethod(type)?
-                        .Invoke(this, new object[] { requireAll, name });
+                    if (preload && prop.Name == nameof(Environment)) continue;
+
+                    var readonlyProp = prop.GetSetMethod() is null;
+                    var type = prop.PropertyType;
+                    var name = $"{prefix}.{prop.Name}";
+                    object value = null;
+
+
+                    if (preload || !readonlyProp)
+                    {
+                        if (!type.IsPrimitive
+                            && !type.IsEnum
+                            && type != typeof(string)
+                            && type != typeof(decimal)
+                            && type != typeof(DateTime))
+                        {
+                            var valResult = this.GetType().GetMethods()
+                                .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
+                                .FirstOrDefault()?
+                                .MakeGenericMethod(type)?
+                                .Invoke(this, new object[] { requireAll, name, false, errors }) as BindResult<T>;
+
+                            errors.AddRange(valResult.Errors);
+                            value = valResult.Result;
+                        }
+                        else if (preload)
+                        {
+                            var getter = prop.GetGetMethod();
+                            if (getter == null) continue;
+
+                            value = getter.Invoke(this, Array.Empty<object>());
+                        }
+
+                        if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+                        {
+                            value = Get(type, name);
+                        }
+
+                        if (!(value is null))
+                        {
+                            if (preload)
+                            {
+                                _cache[name] = new CacheEntry(value);
+                            }
+
+                            prop.SetValue(
+                                target,
+                                value
+                            );
+                        }
+                    }
                 }
-                else if (SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+                catch (TargetInvocationException tie)
                 {
-                    value = Get(type, name);
+                    switch (tie.InnerException)
+                    {
+                        case KeyNotFoundException _:
+                            errors.Add(prop.Name + " not found");
+                            break;
+                        case FormatException fe:
+                            errors.Add("Can't parse " + prop.Name);
+                            break;
+                        default:
+                            errors.Add(prop.Name + " failed," + tie.InnerException?.Message);
+                            break;
+                    }
                 }
-
-                if (!(value is null)) {
-                    prop.SetValue(
-                        target,
-                        value
-                    );
+                catch (Exception ex)
+                {
+                    errors.Add(prop.Name + " failed, " + ex.Message);
                 }
-
             }
         }
 
@@ -282,41 +354,19 @@ namespace Fig
         /// <exception cref="ConfigurationException"></exception>
         internal void PreLoad()
         {
-            _cache = new Dictionary<string, CacheEntry>(StringComparer.InvariantCultureIgnoreCase);
+            _cache.Clear();
+
             var errors = new List<string>();
-            foreach (var propertyInfo in GetType().GetProperties())
-            {
-                try
-                {
-                    var name = propertyInfo.Name;
-                    if (name == nameof(Environment)) continue;
 
-                    var getter = propertyInfo.GetGetMethod();
-                    if (getter == null) continue;
+            var settingsType = typeof(Settings);
+            var bindMethods = settingsType.GetMethods()
+                .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 5)
+                .FirstOrDefault();
 
-                    var val = getter.Invoke(this, Array.Empty<object>());
-                    _cache[name] = new CacheEntry(val);
-                }
-                catch (TargetInvocationException tie)
-                {
-                    switch (tie.InnerException)
-                    {
-                        case KeyNotFoundException _:
-                            errors.Add(propertyInfo.Name + " not found");
-                            break;
-                        case FormatException fe:
-                            errors.Add("Can't parse " + propertyInfo.Name);
-                            break;
-                        default:
-                            errors.Add(propertyInfo.Name + " failed," + tie.InnerException?.Message);
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errors.Add(propertyInfo.Name + " failed, " + ex.Message);
-                }
-            }
+            bindMethods?
+                .MakeGenericMethod(settingsType)?
+                .Invoke(this, new object[] { this, false, null, true, errors });
+
             if (errors.Any()) throw new ConfigurationException(errors);
         }
 
