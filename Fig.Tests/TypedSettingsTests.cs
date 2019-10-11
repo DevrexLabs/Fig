@@ -12,7 +12,8 @@ namespace Fig.Test
         public void Setup()
         {
             this._settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary() {
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname",
                     [$"{nameof(TestClass)}.{nameof(TestClass.Age)}"] = "40",
                     [$"{nameof(TestClass)}.{nameof(TestClass.Pi)}"] = "3.14"
@@ -34,7 +35,8 @@ namespace Fig.Test
         public void WhenBindAndMissingSettingsPropertyThrowsException()
         {
             this._settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary() {
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname"
                 })
                 .Build();
@@ -46,7 +48,8 @@ namespace Fig.Test
         public void WhenBindWithAllPropertiesNotRequiredAndMissingSettingsPropertyThrowsException()
         {
             this._settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary() {
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname"
                 })
                 .Build();
@@ -62,7 +65,8 @@ namespace Fig.Test
         public void WhenBindWithNestedClassPropertyReturnsValue()
         {
             this._settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary() {
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
                     [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Name)}"] = "Fullname",
                     [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.FlagOne)}"] = "false",
                     [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.TestEnum)}"] = "Two"
@@ -75,6 +79,51 @@ namespace Fig.Test
             Assert.AreEqual(false, testClass.Flags.FlagOne);
             Assert.AreEqual(false, testClass.Flags.FlagTwo);
             Assert.AreEqual(NestedEnum.Two, testClass.Flags.TestEnum);
+        }
+
+        [Test]
+        public void WhenEnvironmentSetAndBindReturnsValue()
+        {
+            var environment = "TEST";
+            var propertyName = $"{nameof(TestClass)}.{nameof(TestClass.Name)}";
+            var expectedValue = "FullnameTest";
+
+
+            this._settings = new SettingsBuilder()
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
+                    [$"{propertyName}"] = "Fullname",
+                    [$"{propertyName}:{environment}"] = expectedValue
+                })
+                .Build();
+
+            this._settings.SetEnvironment(environment);
+
+            var testClass = this._settings.Bind<TestClass>(false);
+
+            Assert.AreEqual(expectedValue, testClass.Name);
+        }
+
+        [Test]
+
+        public void WhenEnvironmentNotSetAndBindReturnsValue()
+        {
+            var environment = "TEST";
+            var propertyName = $"{nameof(TestClass)}.{nameof(TestClass.Name)}";
+            var expectedValue = "Fullname";
+
+
+            this._settings = new SettingsBuilder()
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
+                    [$"{propertyName}"] = expectedValue,
+                    [$"{propertyName}:{environment}"] = "FullnameTest"
+                })
+                .Build();
+
+            var testClass = this._settings.Bind<TestClass>(false);
+
+            Assert.AreEqual(expectedValue, testClass.Name);
         }
 
         private class TestClass
@@ -98,7 +147,8 @@ namespace Fig.Test
             public NestedEnum TestEnum { get; set; } = NestedEnum.One;
         }
 
-        private enum NestedEnum {
+        private enum NestedEnum
+        {
             One = 1,
             Two = 2
         }
