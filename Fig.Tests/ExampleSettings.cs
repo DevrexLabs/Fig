@@ -10,7 +10,7 @@ namespace Fig.Test
             set => Set(value);
         }
 
-        public int MyReadonlyIntProperty 
+        public int MyReadonlyIntProperty
             => Get<int>();
 
         /// <summary>
@@ -22,10 +22,10 @@ namespace Fig.Test
             get => Get<int>();
             set => Set<int>(value);
         }
-        
-        public TimeSpan MyTimeSpan 
+
+        public TimeSpan MyTimeSpan
             => Get<TimeSpan>();
-        
+
         public int HasDefault
             => Get(() => 1234);
     }
