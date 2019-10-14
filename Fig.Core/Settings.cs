@@ -169,23 +169,22 @@ namespace Fig
         {
             var errors = new List<string>();
 
-            Bind(target, requireAll, prefix, false, errors);
+            var result = Bind(target, requireAll, prefix, false, errors);
 
-            if (errors.Any()) throw new ConfigurationException(errors);
+            if (result.Errors.Any()) throw new ConfigurationException(errors);
         }
 
         private BindResult<T> GetBindResult<T>(bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             var t = new T();
-            Bind(t, requireAll, prefix, preload, errors);
-            return new BindResult<T>(errors, t);
+            return Bind(t, requireAll, prefix, preload, errors);
         }
 
-        internal void Bind<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        private BindResult<T> Bind<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             errors = errors ?? new List<string>();
 
-            prefix = ((prefix ?? String.Empty).Trim() == String.Empty)
+            prefix = ((prefix ?? String.Empty).Trim() == String.Empty && !preload)
                 ? typeof(T).Name
                 : prefix;
 
@@ -197,9 +196,8 @@ namespace Fig
 
                     var readonlyProp = prop.GetSetMethod() is null;
                     var type = prop.PropertyType;
-                    var name = $"{prefix}.{prop.Name}";
+                    var name = String.IsNullOrEmpty(prefix?.Trim()) ? prop.Name : $"{prefix}.{prop.Name}";
                     object value = null;
-
 
                     if (preload || !readonlyProp)
                     {
@@ -207,7 +205,8 @@ namespace Fig
                             && !type.IsEnum
                             && type != typeof(string)
                             && type != typeof(decimal)
-                            && type != typeof(DateTime))
+                            && type != typeof(DateTime)
+                            && type != typeof(TimeSpan))
                         {
                             var valResult = this.GetType().GetMethods()
                                 .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
@@ -233,15 +232,18 @@ namespace Fig
 
                         if (!(value is null))
                         {
-                            if (preload)
+                            if (preload && !_cache.ContainsKey(name))
                             {
                                 _cache[name] = new CacheEntry(value);
                             }
+                            else if (!readonlyProp)
+                            {
+                                prop.SetValue(
+                                    target,
+                                    value
+                                );
+                            }
 
-                            prop.SetValue(
-                                target,
-                                value
-                            );
                         }
                     }
                 }
@@ -265,6 +267,8 @@ namespace Fig
                     errors.Add(prop.Name + " failed, " + ex.Message);
                 }
             }
+
+            return new BindResult<T>(errors, target);
         }
 
         /// <summary>
@@ -354,17 +358,18 @@ namespace Fig
         /// <exception cref="ConfigurationException"></exception>
         internal void PreLoad()
         {
-            _cache.Clear();
+            _cache = new Dictionary<string, CacheEntry>(StringComparer.InvariantCultureIgnoreCase);
 
             var errors = new List<string>();
 
             var settingsType = typeof(Settings);
-            var bindMethods = settingsType.GetMethods()
+            var bindMethods = settingsType
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 5)
                 .FirstOrDefault();
 
             bindMethods?
-                .MakeGenericMethod(settingsType)?
+                .MakeGenericMethod(this.GetType())?
                 .Invoke(this, new object[] { this, false, null, true, errors });
 
             if (errors.Any()) throw new ConfigurationException(errors);
