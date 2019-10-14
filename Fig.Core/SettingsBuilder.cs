@@ -9,7 +9,7 @@ namespace Fig
 {
     public class SettingsBuilder
     {
-        private readonly CompositeSettingsDictionary _compositeDictionary 
+        private CompositeSettingsDictionary _compositeDictionary
             = new CompositeSettingsDictionary();
 
         private string _environment = "";
@@ -21,9 +21,9 @@ namespace Fig
 
         public Settings Build()
         {
-            return new Settings(_compositeDictionary) {Environment = _environment};
+            return new Settings(_compositeDictionary) { Environment = _environment };
         }
-        
+
         public T Build<T>() where T : Settings, new()
         {
             var result = Activator.CreateInstance<T>();
@@ -42,7 +42,7 @@ namespace Fig
             return this;
         }
 
-        public SettingsBuilder UseCommandLine(string[] args, string prefix = "--fig:",  char delimiter = '=' )
+        public SettingsBuilder UseCommandLine(string[] args, string prefix = "--fig:", char delimiter = '=')
         {
             Add(new StringArraySource(args, prefix, delimiter).ToSettingsDictionary());
             return this;
@@ -59,7 +59,7 @@ namespace Fig
             _compositeDictionary.Add(settingsDictionary.WithNormalizedEnvironmentQualifiers());
         }
 
-        protected internal void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)
+        protected internal void AddFileBasedSource(Func<string, SettingsSource> sourceFactory, string fileNameTemplate, bool required)
         {
             var fileName = _compositeDictionary.ExpandVariables(fileNameTemplate);
             var fullPath = Path.Combine(_basePath, fileName);
@@ -74,7 +74,7 @@ namespace Fig
 
         public SettingsBuilder UseIniFile(string fileNameTemplate, bool required = true)
         {
-            AddFileBasedSource(f => new IniFileSettingsSource(f), fileNameTemplate, required );
+            AddFileBasedSource(f => new IniFileSettingsSource(f), fileNameTemplate, required);
             return this;
         }
 

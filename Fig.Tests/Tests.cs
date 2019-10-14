@@ -11,12 +11,12 @@ namespace Fig.Test
     {
         private ExampleSettings _settings;
         private SettingsDictionary _settingsDictionary;
-        
+
         [SetUp]
         public void Setup()
         {
             _settings = new ExampleSettings();
-            
+
             //Normally the builder does all this stuff
             //but we want to have a direct reference to the dictionary
             _settingsDictionary = new SettingsDictionary()
@@ -26,7 +26,7 @@ namespace Fig.Test
                 ["ExampleSettings.MyReadonlyIntProperty"] = "600",
                 ["ExampleSettings.MyTimeSpan"] = "00:20:00",
 
-                ["MyTimeSpan"]  = "00:42:00",
+                ["MyTimeSpan"] = "00:42:00",
 
                 ["Key"] = "Key",
                 ["Key:PROD"] = "PROD",
@@ -38,34 +38,34 @@ namespace Fig.Test
 
                 ["ExampleSettings.MyTimeSpan:FAIL"] = "not a timespan"
             };
-            
+
             _settings.SettingsDictionary = new CompositeSettingsDictionary();
             _settings.SettingsDictionary.Add(_settingsDictionary);
-            
+
             _settings.PreLoad();
         }
-        
+
         [Test]
         public void PropertyChangedFiresWhenPropertyChanges()
         {
             string propertyChangedName = null;
-            
+
             //Arrange
             _settings.PropertyChanged += (s, ea) => propertyChangedName = ea.PropertyName;
 
             //Act
             _settings.MyIntProperty = 500;
-            
+
             //Assert
-            Assert.NotNull(propertyChangedName,"The event was not received");
+            Assert.NotNull(propertyChangedName, "The event was not received");
             Assert.AreEqual(nameof(_settings.MyIntProperty), propertyChangedName);
         }
 
         [Test]
         public void CanReadDefault()
         {
-			Assert.AreEqual(1234, _settings.HasDefault);
-		}
+            Assert.AreEqual(1234, _settings.HasDefault);
+        }
 
         [Test]
         public void CanUpdateRuntimeValue()
@@ -79,9 +79,10 @@ namespace Fig.Test
         {
             var builder = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary);
-                
-            Assert.Throws<ConfigurationException>(() => { 
-                    builder.Build<UnresolvedPropertySettings>();
+
+            Assert.Throws<ConfigurationException>(() =>
+            {
+                builder.Build<UnresolvedPropertySettings>();
             });
         }
 
@@ -89,7 +90,7 @@ namespace Fig.Test
         public void BuilderBonanza()
         {
             var settings = new SettingsBuilder()
-                .UseCommandLine(new []{"--fig:MySettings.DefaultBeverage=coffee"})
+                .UseCommandLine(new[] { "--fig:MySettings.DefaultBeverage=coffee" })
                 .UseEnvironmentVariables(prefix: "FIG_")
                 .BasePath(Directory.GetCurrentDirectory())
                 .UseAppSettingsJson(fileNameTemplate: "appSettings.${CONFIG}.json", required: false)
@@ -106,20 +107,20 @@ namespace Fig.Test
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build<MySettings>();
-            
+
             Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
         }
-        
+
         [Test]
         public void EnvironmentIsRespected()
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build();
-            
+
             //No Configuration, should return unqualified setting
             Assert.AreEqual("Key", settings.Get<string>("Key"));
-            
+
             settings.SetEnvironment("prod");
             Assert.AreEqual("PROD", settings.Get<string>("Key"));
 
@@ -138,12 +139,12 @@ namespace Fig.Test
                 ["ExampleSettings.RequiredInt"] = "200",
                 ["ExampleSettings.MyReadonlyIntProperty"] = "200"
             };
-            
+
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(dictionary)
                 .SetEnvironment("${ENV}")
                 .Build<ExampleSettings>();
-            
+
             Assert.AreEqual(TimeSpan.FromMinutes(15), settings.MyTimeSpan);
             Assert.AreEqual("staging", settings.Environment);
         }
@@ -153,13 +154,13 @@ namespace Fig.Test
         {
             int propertiesChanged = 0;
             _settings.PropertyChanged += (sender, args) => propertiesChanged++;
-            
+
             Assert.Throws<ConfigurationException>(
                 () => _settings.SetEnvironment("fail")
             );
-            
+
             //Nothing should have changed
-            Assert.AreEqual("",_settings.Environment);
+            Assert.AreEqual("", _settings.Environment);
             Assert.AreEqual(0, propertiesChanged);
         }
 
@@ -173,15 +174,15 @@ namespace Fig.Test
             //Set up callback to record all property change notifications
             var propertyChangeNotifications = new List<string>();
             settings.PropertyChanged += (sender, args) => propertyChangeNotifications.Add(args.PropertyName);
-           
+
             //Initial value with no Environment set
             Assert.AreEqual("Key", settings.Key);
 
-            //switching environment changes a 
+            //switching environment changes a
             settings.SetEnvironment("prod");
             Assert.AreEqual("PROD", settings.Key);
             Assert.AreEqual("Key", propertyChangeNotifications.Single());
-            
+
             //changing env but no properties will change
             settings.SetEnvironment("prod2");
             Assert.AreEqual("PROD", settings.Key);
@@ -195,13 +196,13 @@ namespace Fig.Test
     {
         public int Foo => Get<int>();
     }
-    
+
     class MySettings : Settings
     {
         public MySettings()
-            :base(bindingPath: "") 
-        {}
-        
+            : base(bindingPath: "")
+        { }
+
         public TimeSpan MyTimeSpan => Get<TimeSpan>();
 
         public string Key => Get<string>();
