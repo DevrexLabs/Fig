@@ -106,7 +106,7 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix:"");
+                .Build<MySettings>(prefix: "");
 
             Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
         }
@@ -169,7 +169,7 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix:"");
+                .Build<MySettings>(prefix: "");
 
             //Set up callback to record all property change notifications
             var propertyChangeNotifications = new List<string>();

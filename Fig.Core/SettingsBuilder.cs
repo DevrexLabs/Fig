@@ -23,7 +23,7 @@ namespace Fig
         {
             return new Settings(_compositeDictionary) { Environment = _environment };
         }
-        
+
         public T Build<T>(string prefix = null) where T : Settings, new()
         {
             var result = Activator.CreateInstance<T>();
