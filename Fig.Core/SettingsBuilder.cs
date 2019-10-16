@@ -56,7 +56,7 @@ namespace Fig
 
         private void Add(SettingsDictionary settingsDictionary)
         {
-            _compositeDictionary.Add(settingsDictionary.WithNormalizedUUU UsssretdsEnvironmentQualifiers());
+            _compositeDictionary.Add(settingsDictionary.WithNormalizedEnvironmentQualifiers());
         }
 
         protected internal void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)
