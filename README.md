@@ -196,21 +196,49 @@ lower layers.
     .Build<Settings>();
 ```
 Notice the environment specific json file. The variable `${ENV}`
-will be looked up based on what has been added so far,
+will be looked up based on what has been added so far:
 environment variables and command line.
 
 ## Dealing with multiple environments
 Normally you use different settings in different environments such as test, production, staging, dev, etc
-In the previous section we used variable expansion to include an environment specific file json file.
+In the previous section we used variable expansion to include an environment specific json file.
 
-A different approach is to qualify keys with an environment name suffix.
-Given these keys:
+A different approach is to qualify keys with an environment name suffix:
+
 ```
    redis.endpoint=localhost:6379
    redis.endpoint:PROD=redis.mydomain.net:6379
    redis.endpoint:STAGING=10.0.0.42:6379
    ENV=PROD
 ```
+
+You can also qualify an  entire section of an ini or json file:
+
+```json
+  {
+     "Network:PROD" : {
+        "ip" : "10.0.0.1",
+	"port" : 3001
+     }
+
+     "Network:TEST" : {
+        "ip" : "127.0.0.1",
+	"port" : 13001
+     }
+  }
+```
+or
+
+```ini
+[Network:PROD]
+ip=10.0.0.1
+port=3001
+
+[Network:TEST]
+ip=127.0.0.1
+port =13001
+```
+
 set the environment on the builder:
 ```c#
    var settings = new SettingsBuilder()
@@ -249,7 +277,7 @@ Install-Package Fig.AppSettingsJson
 public class MySource : SettingsSource
 {
    protected override IEnumerable<(string, string)> GetSettings()
-   {
+   
        yield return ("key", "value");
    }
 }
@@ -260,8 +288,7 @@ public static class MySettingsBuilderExtensions
    {
       var mySource = new MySource();
       var dictionary = mySource.ToSettingsDictionary();
-      builder.Add(dictionary);
-      return builder;
+      return builder.Use(dictionary);
    }
 }
 ``` 

@@ -76,5 +76,25 @@ namespace Fig.Test
             Assert.IsTrue(found);
             Assert.AreEqual("b", result);
         }
+        
+        [Test]
+        public void KeyTransformation()
+        {
+            var dict = new SettingsDictionary()
+            {
+                [":prod.a"] = "a:prod",
+                ["a:prod.b"] = "a.b:prod",
+                ["a.b:prod.c"] = "a.b.c:prod",
+                ["a.b.c:prod"] = "a.b.c:prod",
+                ["a.b"] = "a.b",
+                ["a"] = "a"
+            };
+
+            var transformed = dict.WithNormalizedEnvironmentQualifiers();
+            foreach (var key in transformed.Keys)
+            {
+                Assert.AreEqual(key, transformed[key]);
+            }
+        }
     }
 }

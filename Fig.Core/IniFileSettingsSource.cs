@@ -12,7 +12,7 @@ namespace Fig.Core
         /// <summary>
         /// Lines of the read file
         /// </summary>
-        private string[] _lines;
+        private readonly string[] _lines;
 
         public IniFileSettingsSource(string path) : this(File.ReadAllLines(path)) { }
 
@@ -24,7 +24,7 @@ namespace Fig.Core
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
         {
             var sectionMatcher = new Regex(@"^\[(.+)\]$", RegexOptions.IgnoreCase);
-            var keyValueMatcher = new Regex(@"^\s*([^#].+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
+            var keyValueMatcher = new Regex(@"^\s*(    .+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
 
             //Last section matched
             var currentSection = "";

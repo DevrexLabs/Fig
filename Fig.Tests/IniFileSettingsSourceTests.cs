@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Fig.Core;
 using NUnit.Framework;
 
@@ -21,7 +22,15 @@ namespace Fig.Test
                 "ScanInterval=00:25:00",
                 "#comment",
                 "[OtherSection]",
-                "key3=300"});
+                "key3=300",
+                "", //empty line
+                "[:PROD]",
+                "root=root:PROD",
+                "[SectionWithEnv:PROD]",
+                "a=SectionWithEnv.a:PROD",
+                "b=SectionWithEnv.b:PROD",
+                "c.d=SectionWithEnv.c.d:PROD"
+            });
         }
 
         [Test]
@@ -64,6 +73,29 @@ namespace Fig.Test
 
             Assert.IsTrue(getResult);
             Assert.AreEqual(expectedValue, actualValue);
+        }
+        
+        [Test]
+        public void SectionWithEnvironmentQualifier()
+        {
+            var dict = _iniFileSettingsSource
+                .ToSettingsDictionary()
+                .WithNormalizedEnvironmentQualifiers();
+            
+            Assert.AreEqual("root:PROD", dict["root:PROD"]);
+
+            var keys = new[]
+            {
+                "SectionWithEnv.a:PROD",
+                "SectionWithEnv.b:PROD",
+                "SectionWithEnv.c.d:PROD",
+                "root:PROD"
+            };
+
+            foreach (var key in keys)
+            {
+                Assert.AreEqual(key, dict[key]);
+            }
         }
     }
 }

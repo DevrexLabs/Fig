@@ -9,7 +9,7 @@ namespace Fig
 {
     public class SettingsBuilder
     {
-        private CompositeSettingsDictionary _compositeDictionary 
+        private readonly CompositeSettingsDictionary _compositeDictionary 
             = new CompositeSettingsDictionary();
 
         private string _environment = "";
@@ -56,7 +56,7 @@ namespace Fig
 
         private void Add(SettingsDictionary settingsDictionary)
         {
-            _compositeDictionary.Add(settingsDictionary);
+            _compositeDictionary.Add(settingsDictionary.WithNormalizedUUU UsssretdsEnvironmentQualifiers());
         }
 
         protected internal void AddFileBasedSource(Func<string,SettingsSource> sourceFactory, string fileNameTemplate, bool required)

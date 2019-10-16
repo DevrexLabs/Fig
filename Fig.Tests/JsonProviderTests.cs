@@ -13,7 +13,9 @@ namespace Fig.Test
         {
             var path = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
             var source = new AppSettingsJsonSource(path);
-            _settingsDictionary = source.ToSettingsDictionary();
+            _settingsDictionary = source
+                .ToSettingsDictionary()
+                .WithNormalizedEnvironmentQualifiers();
         }
 
         [Test]
@@ -39,11 +41,19 @@ namespace Fig.Test
         [Test]
         public void CanReadArrayOfObjects()
         {
-            var actual = _settingsDictionary["Simpsons.0.Name"];
             Assert.AreEqual("Bart", _settingsDictionary["Simpsons.0.Name"]);
             Assert.AreEqual("Homer", _settingsDictionary["Simpsons.1.Name"]);
             Assert.AreEqual("12", _settingsDictionary["Simpsons.0.age"]);
             Assert.AreEqual("35", _settingsDictionary["Simpsons.1.age"]);
+        }
+
+        [Test]
+        public void CanResolveEnvironmentQualifiedSection()
+        {
+            Assert.AreEqual("1", _settingsDictionary["EnvQualified.a:PROD"]);
+            Assert.AreEqual("1", _settingsDictionary["EnvQualified.b:PROD"]);
+            Assert.AreEqual("2", _settingsDictionary["EnvQualified.a:TEST"]);
+            Assert.AreEqual("2", _settingsDictionary["EnvQualified.b:TEST"]);
         }
     }
 }
