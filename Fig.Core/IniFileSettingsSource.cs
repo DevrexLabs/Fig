@@ -24,7 +24,7 @@ namespace Fig.Core
         internal static IEnumerable<(string, string)> Parse(IEnumerable<string> lines)
         {
             var sectionMatcher = new Regex(@"^\[(.+)\]$", RegexOptions.IgnoreCase);
-            var keyValueMatcher = new Regex(@"^\s*(    .+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
+            var keyValueMatcher = new Regex(@"^\s*(.+?)\s*=\s*(.*)$", RegexOptions.IgnoreCase);
 
             //Last section matched
             var currentSection = "";
