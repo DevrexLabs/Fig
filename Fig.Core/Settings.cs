@@ -60,7 +60,13 @@ namespace Fig
             }
         }
 
-        private class BindResult<T>
+        private interface IBindResult
+        {
+            IEnumerable<string> Errors { get; }
+            object Result { get; }
+        }
+
+        private class BindResult<T> : IBindResult
         {
             public BindResult(List<string> errors, T result)
             {
@@ -69,6 +75,10 @@ namespace Fig
             }
             public List<string> Errors { get; }
             public T Result { get; }
+
+            IEnumerable<string> IBindResult.Errors => this.Errors;
+
+            object IBindResult.Result => this.Result;
         }
 
         public Settings(string bindingPath = null, IStringConverter converter = null)
@@ -173,7 +183,7 @@ namespace Fig
         {
             var errors = new List<string>();
 
-            var result = Bind(target, requireAll, prefix, false, errors);
+            var result = GetBindResult(target, requireAll, prefix, false, errors);
 
             if (result.Errors.Any()) throw new ConfigurationException(errors);
         }
@@ -181,10 +191,10 @@ namespace Fig
         private BindResult<T> GetBindResult<T>(bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             var t = new T();
-            return Bind(t, requireAll, prefix, preload, errors);
+            return GetBindResult(t, requireAll, prefix, preload, errors);
         }
 
-        private BindResult<T> Bind<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        private BindResult<T> GetBindResult<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             errors = errors ?? new List<string>();
 
@@ -211,14 +221,23 @@ namespace Fig
                             && type != typeof(DateTime)
                             && type != typeof(TimeSpan))
                         {
-                            var valResult = this.GetType().GetMethods()
+                            var valObjectResult = this.GetType()
+                                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                                 .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
                                 .FirstOrDefault()?
                                 .MakeGenericMethod(type)?
-                                .Invoke(this, new object[] { requireAll, name, false, errors }) as BindResult<T>;
+                                .Invoke(this, new object[] { requireAll, name, false, errors });
 
-                            errors.AddRange(valResult.Errors);
-                            value = valResult.Result;
+                            var typedResult = valObjectResult as IBindResult;
+                            if (typedResult != null)
+                            {
+                                if (typedResult.Errors?.Any() ?? false)
+                                {
+                                    errors.AddRange(typedResult.Errors);
+                                }
+
+                                value = typedResult.Result;
+                            }
                         }
                         else if (preload)
                         {
@@ -366,14 +385,19 @@ namespace Fig
             var errors = new List<string>();
 
             var settingsType = typeof(Settings);
-            var bindMethods = settingsType
-                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 5)
-                .FirstOrDefault();
+            var currentType = this.GetType();
 
-            bindMethods?
-                .MakeGenericMethod(this.GetType())?
-                .Invoke(this, new object[] { this, false, null, true, errors });
+            if (settingsType != currentType)
+            {
+                var bindMethods = settingsType
+                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 5)
+                    .ToArray();
+
+                bindMethods.FirstOrDefault()?
+                    .MakeGenericMethod(currentType)?
+                    .Invoke(this, new object[] { this, false, null, true, errors });
+            }
 
             if (errors.Any()) throw new ConfigurationException(errors);
         }
