@@ -65,7 +65,7 @@ namespace Fig
             _converter = converter ?? new InvariantStringConverter();
             var comparer = StringComparer.InvariantCultureIgnoreCase;
             _cache = new Dictionary<string, CacheEntry>(comparer);
-            _bindingPath = bindingPath ?? GetBindingPath();
+            SetBindingPath(bindingPath);
             Environment = "";
         }
 
@@ -78,6 +78,10 @@ namespace Fig
             else return GetType().Name;
         }
 
+        internal void SetBindingPath(string bindingPath)
+        {
+            _bindingPath = bindingPath ?? GetBindingPath();
+        }
 
         internal Settings(CompositeSettingsDictionary settingsDictionary,
             string bindingPath = null, IStringConverter converter = null)
@@ -154,9 +158,8 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
-            prefix = ((prefix ?? String.Empty).Trim() == String.Empty)
-                ? typeof(T).Name
-                : prefix;
+            prefix = prefix ?? typeof(T).Name;
+            if (prefix.Length > 0) prefix = prefix + ".";
 
             var props = typeof(T)
                 .GetProperties()
@@ -165,7 +168,7 @@ namespace Fig
             foreach (var prop in props)
             {
                 var type = prop.PropertyType;
-                var name = $"{prefix}.{prop.Name}";
+                var name = $"{prefix}{prop.Name}";
                 object value = null;
 
                 if (!type.IsPrimitive

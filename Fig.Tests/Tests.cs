@@ -11,12 +11,12 @@ namespace Fig.Test
     {
         private ExampleSettings _settings;
         private SettingsDictionary _settingsDictionary;
-        
+
         [SetUp]
         public void Setup()
         {
             _settings = new ExampleSettings();
-            
+
             //Normally the builder does all this stuff
             //but we want to have a direct reference to the dictionary
             _settingsDictionary = new SettingsDictionary()
@@ -79,7 +79,7 @@ namespace Fig.Test
         {
             var builder = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary);
-                
+
             Assert.Throws<ConfigurationException>(() => { 
                     builder.Build<UnresolvedPropertySettings>();
             });
@@ -105,21 +105,21 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>();
-            
+                .Build<MySettings>(prefix:"");
+
             Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
         }
-        
+
         [Test]
         public void EnvironmentIsRespected()
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build();
-            
+
             //No Configuration, should return unqualified setting
             Assert.AreEqual("Key", settings.Get<string>("Key"));
-            
+
             settings.SetEnvironment("prod");
             Assert.AreEqual("PROD", settings.Get<string>("Key"));
 
@@ -138,12 +138,12 @@ namespace Fig.Test
                 ["ExampleSettings.RequiredInt"] = "200",
                 ["ExampleSettings.MyReadonlyIntProperty"] = "200"
             };
-            
+
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(dictionary)
                 .SetEnvironment("${ENV}")
                 .Build<ExampleSettings>();
-            
+
             Assert.AreEqual(TimeSpan.FromMinutes(15), settings.MyTimeSpan);
             Assert.AreEqual("staging", settings.Environment);
         }
@@ -153,11 +153,11 @@ namespace Fig.Test
         {
             int propertiesChanged = 0;
             _settings.PropertyChanged += (sender, args) => propertiesChanged++;
-            
+
             Assert.Throws<ConfigurationException>(
                 () => _settings.SetEnvironment("fail")
             );
-            
+
             //Nothing should have changed
             Assert.AreEqual("",_settings.Environment);
             Assert.AreEqual(0, propertiesChanged);
@@ -168,7 +168,7 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>();
+                .Build<MySettings>(prefix:"");
 
             //Set up callback to record all property change notifications
             var propertyChangeNotifications = new List<string>();
