@@ -386,12 +386,10 @@ namespace Fig
 
             if (settingsType != currentType)
             {
-                var bindMethods = settingsType
+                settingsType
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 5)
-                    .ToArray();
-
-                bindMethods.FirstOrDefault()?
+                    .FirstOrDefault()?
                     .MakeGenericMethod(currentType)?
                     .Invoke(this, new object[] { this, false, null, true, errors });
             }
