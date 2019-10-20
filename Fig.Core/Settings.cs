@@ -35,6 +35,13 @@ namespace Fig
         /// </summary>
         private string _bindingPath;
 
+        private readonly HashSet<Type> _nonNestedPropertyTypes = new HashSet<Type> {
+            typeof(string),
+            typeof(decimal),
+            typeof(DateTime),
+            typeof(TimeSpan)
+        };
+
         private class CacheEntry
         {
             /// <summary>
@@ -165,6 +172,8 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public T Bind<T>(bool requireAll = true, string prefix = null) where T : new()
         {
+            prefix = prefix ?? typeof(T).Name;
+
             var result = GetBindResult<T>(requireAll, prefix);
 
             if (result.Errors.Any()) throw new ConfigurationException(result.Errors);
@@ -181,9 +190,11 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
+            prefix = prefix ?? typeof(T).Name;
+
             var errors = new List<string>();
 
-            var result = GetBindResult(target, requireAll, prefix, false, errors);
+            var result = BindProperties(target, requireAll, prefix, false, errors);
 
             if (result.Errors.Any()) throw new ConfigurationException(errors);
         }
@@ -191,15 +202,14 @@ namespace Fig
         private BindResult<T> GetBindResult<T>(bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             var t = new T();
-            return GetBindResult(t, requireAll, prefix, preload, errors);
+            return BindProperties(t, requireAll, prefix, preload, errors);
         }
 
-        private BindResult<T> GetBindResult<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        private BindResult<T> BindProperties<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
         {
             errors = errors ?? new List<string>();
 
-            prefix = prefix ?? typeof(T).Name;
-            if (prefix.Length > 0) prefix = prefix + ".";
+            prefix = prefix ?? this._bindingPath;
 
             foreach (var prop in typeof(T).GetProperties())
             {
@@ -212,61 +222,56 @@ namespace Fig
                     var name = String.IsNullOrEmpty(prefix?.Trim()) ? prop.Name : $"{prefix}.{prop.Name}";
                     object value = null;
 
-                    if (preload || !readonlyProp)
+                    // No need to keep going if the property is readonly and not part of a preload opertation
+                    if (readonlyProp && !preload) continue;
+
+                    if (IsNestedProperty(type))
                     {
-                        if (!type.IsPrimitive
-                            && !type.IsEnum
-                            && type != typeof(string)
-                            && type != typeof(decimal)
-                            && type != typeof(DateTime)
-                            && type != typeof(TimeSpan))
-                        {
-                            var valObjectResult = this.GetType()
-                                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                                .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
-                                .FirstOrDefault()?
-                                .MakeGenericMethod(type)?
-                                .Invoke(this, new object[] { requireAll, name, false, errors });
+                        var valObjectResult = this.GetType()
+                            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                            .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
+                            .FirstOrDefault()?
+                            .MakeGenericMethod(type)?
+                            .Invoke(this, new object[] { requireAll, name, false, errors });
 
-                            var typedResult = valObjectResult as IBindResult;
-                            if (typedResult != null)
+                        var typedResult = valObjectResult as IBindResult;
+                        if (typedResult != null)
+                        {
+                            if (typedResult.Errors?.Any() ?? false)
                             {
-                                if (typedResult.Errors?.Any() ?? false)
-                                {
-                                    errors.AddRange(typedResult.Errors);
-                                }
-
-                                value = typedResult.Result;
-                            }
-                        }
-                        else if (preload)
-                        {
-                            var getter = prop.GetGetMethod();
-                            if (getter == null) continue;
-
-                            value = getter.Invoke(this, Array.Empty<object>());
-                        }
-
-                        if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
-                        {
-                            value = Get(type, name);
-                        }
-
-                        if (!(value is null))
-                        {
-                            if (preload && !_cache.ContainsKey(name))
-                            {
-                                _cache[name] = new CacheEntry(value);
-                            }
-                            else if (!readonlyProp)
-                            {
-                                prop.SetValue(
-                                    target,
-                                    value
-                                );
+                                errors.AddRange(typedResult.Errors);
                             }
 
+                            value = typedResult.Result;
                         }
+                    }
+                    else if (preload)
+                    {
+                        var getter = prop.GetGetMethod();
+                        if (getter == null) continue;
+
+                        value = getter.Invoke(this, Array.Empty<object>());
+                    }
+
+                    if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+                    {
+                        value = Get(type, name);
+                    }
+
+                    if (!(value is null))
+                    {
+                        if (preload && !_cache.ContainsKey(name))
+                        {
+                            _cache[name] = new CacheEntry(value);
+                        }
+                        else if (!readonlyProp)
+                        {
+                            prop.SetValue(
+                                target,
+                                value
+                            );
+                        }
+
                     }
                 }
                 catch (TargetInvocationException tie)
@@ -280,7 +285,7 @@ namespace Fig
                             errors.Add("Can't parse " + prop.Name);
                             break;
                         default:
-                            errors.Add(prop.Name + " failed," + tie.InnerException?.Message);
+                            errors.Add(prop.Name + " failed," + tie.InnerException.Message);
                             break;
                     }
                 }
@@ -292,6 +297,16 @@ namespace Fig
 
             return new BindResult<T>(errors, target);
         }
+
+        /// <summary>
+        /// Determines whether the property type provided is a nested class or not
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns>True or False</returns>
+        private bool IsNestedProperty(Type type) =>
+            !type.IsPrimitive
+            && !type.IsEnum
+            && !this._nonNestedPropertyTypes.Contains(type);
 
         /// <summary>
         /// Get as string without any conversion
@@ -356,12 +371,12 @@ namespace Fig
         {
             lock (this)
             {
-                if (_cache.ContainsKey(propertyName))
+                key = GetKey(key, propertyName);
+                if (_cache.ContainsKey(key))
                 {
-                    return _cache[propertyName].CurrentValue;
+                    return _cache[key].CurrentValue;
                 }
 
-                key = GetKey(key, propertyName);
                 if (!SettingsDictionary.TryGetValue(key, Environment, out string value))
                 {
                     if (@default == null) throw new KeyNotFoundException(key);
@@ -391,7 +406,7 @@ namespace Fig
             {
                 var bindMethods = settingsType
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 5)
+                    .Where(x => x.Name == "BindProperties" && x.GetParameters()?.Length == 5)
                     .ToArray();
 
                 bindMethods.FirstOrDefault()?
@@ -416,7 +431,7 @@ namespace Fig
 
             lock (this)
             {
-                var entry = _cache[key];
+                var entry = _cache[GetKey(null, key)];
 
                 if (entry.CurrentValue != null && !entry.CurrentValue.Equals(value))
                 {
