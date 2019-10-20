@@ -229,9 +229,9 @@ namespace Fig
                     {
                         var valObjectResult = this.GetType()
                             .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                            .Where(x => x.Name == "GetBindResult" && x.GetParameters()?.Length == 4)
-                            .FirstOrDefault()?
-                            .MakeGenericMethod(type)?
+                            .Where(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)
+                            .FirstOrDefault()
+                            .MakeGenericMethod(type)
                             .Invoke(this, new object[] { requireAll, name, false, errors });
 
                         var typedResult = valObjectResult as IBindResult;
@@ -406,11 +406,9 @@ namespace Fig
             {
                 var bindMethods = settingsType
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(x => x.Name == "BindProperties" && x.GetParameters()?.Length == 5)
-                    .ToArray();
-
-                bindMethods.FirstOrDefault()?
-                    .MakeGenericMethod(currentType)?
+                    .Where(x => x.Name == nameof(Settings.BindProperties) && x.GetParameters()?.Length == 5)
+                    .FirstOrDefault()
+                    .MakeGenericMethod(currentType)
                     .Invoke(this, new object[] { this, false, null, true, errors });
             }
 
