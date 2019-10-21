@@ -73,19 +73,27 @@ namespace Fig
             object Result { get; }
         }
 
-        private class BindResult<T> : IBindResult
+        private class BindResultBase : IBindResult
         {
-            public BindResult(List<string> errors, T result)
+            public BindResultBase(IEnumerable<string> errors, object result)
             {
                 Errors = errors;
                 Result = result;
             }
-            public List<string> Errors { get; }
-            public T Result { get; }
-
-            IEnumerable<string> IBindResult.Errors => this.Errors;
+            public IEnumerable<string> Errors { get; }
+            public object Result { get; }
 
             object IBindResult.Result => this.Result;
+        }
+
+        private class BindResult<T> : BindResultBase
+        {
+            public BindResult(List<string> errors, T result) : base(errors, result)
+            {
+                Result = result;
+            }
+
+            public new T Result { get; }
         }
 
         public Settings(string bindingPath = null, IStringConverter converter = null)
@@ -176,7 +184,7 @@ namespace Fig
 
             var result = GetBindResult<T>(requireAll, prefix);
 
-            if (result.Errors.Any()) throw new ConfigurationException(result.Errors);
+            if (result.Errors.Any()) throw new ConfigurationException(result.Errors.ToList());
 
             return result.Result;
         }
@@ -218,60 +226,33 @@ namespace Fig
                     if (preload && prop.Name == nameof(Environment)) continue;
 
                     var readonlyProp = prop.GetSetMethod() is null;
-                    var type = prop.PropertyType;
                     var name = String.IsNullOrEmpty(prefix?.Trim()) ? prop.Name : $"{prefix}.{prop.Name}";
-                    object value = null;
 
-                    // No need to keep going if the property is readonly and not part of a preload opertation
+                    // No need to continue if the property is readonly and not part of a preload opertation
                     if (readonlyProp && !preload) continue;
 
-                    if (IsNestedProperty(type))
+                    var result = GetPropertyValue(prop, name, preload, requireAll);
+
+                    if (!(result?.Result is null))
                     {
-                        var valObjectResult = this.GetType()
-                            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                            .Where(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)
-                            .FirstOrDefault()
-                            .MakeGenericMethod(type)
-                            .Invoke(this, new object[] { requireAll, name, false, errors });
-
-                        var typedResult = valObjectResult as IBindResult;
-                        if (typedResult != null)
-                        {
-                            if (typedResult.Errors?.Any() ?? false)
-                            {
-                                errors.AddRange(typedResult.Errors);
-                            }
-
-                            value = typedResult.Result;
-                        }
-                    }
-                    else if (preload)
-                    {
-                        var getter = prop.GetGetMethod();
-                        if (getter == null) continue;
-
-                        value = getter.Invoke(this, Array.Empty<object>());
-                    }
-
-                    if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
-                    {
-                        value = Get(type, name);
-                    }
-
-                    if (!(value is null))
-                    {
+                        // When there is a preload and the value is not in the cache yet, do that here
                         if (preload && !_cache.ContainsKey(name))
                         {
-                            _cache[name] = new CacheEntry(value);
+                            _cache[name] = new CacheEntry(result.Result);
                         }
+                        // Otherwise set the value of the property if it is not readonly
                         else if (!readonlyProp)
                         {
                             prop.SetValue(
                                 target,
-                                value
+                                result.Result
                             );
                         }
+                    }
 
+                    if (result?.Errors?.Any() == true)
+                    {
+                        errors.AddRange(result.Errors);
                     }
                 }
                 catch (TargetInvocationException tie)
@@ -296,6 +277,58 @@ namespace Fig
             }
 
             return new BindResult<T>(errors, target);
+        }
+
+        /// <summary>
+        /// Method to retrieve value either from the settings dictionary or from cache. Uses recursion to get nested class values
+        /// </summary>
+        /// <param name="prop">Property of class that a value is to be returned</param>
+        /// <param name="name">Name of settings dictionary key that is linked to property</param>
+        /// <param name="preload">Determines if the call is from a preload event or not</param>
+        /// <param name="requireAll">Determines if all properties of the binding class should have a matching settings dictionary key and value</param>
+        /// <returns></returns>
+        private IBindResult GetPropertyValue(PropertyInfo prop, string name, bool preload, bool requireAll)
+        {
+            object value = null;
+            var errors = new List<string>();
+
+            if (IsNestedProperty(prop.PropertyType))
+            {
+                // Get nested property value via recursion
+                var valObjectResult = this.GetType()
+                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)
+                    .FirstOrDefault()
+                    .MakeGenericMethod(prop.PropertyType)
+                    .Invoke(this, new object[] { requireAll, name, false, errors });
+
+                var typedResult = valObjectResult as IBindResult;
+                if (typedResult != null)
+                {
+                    if (typedResult.Errors?.Any() ?? false)
+                    {
+                        errors.AddRange(typedResult.Errors);
+                    }
+
+                    value = typedResult.Result;
+                }
+            }
+            // When the call is not for a preload event and it is not nested, attempt to get a value
+            else if (preload)
+            {
+                var getter = prop.GetGetMethod();
+                if (getter == null) return null;
+
+                value = getter.Invoke(this, Array.Empty<object>());
+            }
+
+            // When the value is still null, last chance call to check if there is a value in the settings dictionary
+            if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+            {
+                value = Get(prop.PropertyType, name);
+            }
+
+            return new BindResultBase(errors, value);
         }
 
         /// <summary>
