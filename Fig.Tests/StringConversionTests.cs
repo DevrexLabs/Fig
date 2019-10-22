@@ -125,6 +125,133 @@ namespace Fig.Test
             Assert.That(() => _converter.Convert<TestEnum>("Option3"), Throws.Exception);
         }
 
+        [Test]
+        public void ConvertStringArray()
+        {
+            Assert.AreEqual(new string[] { "1", "2" }, _converter.Convert<string[]>("1,2"));
+            Assert.AreEqual(new string[] { "1" }, _converter.Convert<string[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<string[]>(null));
+        }
+
+        [Test]
+        public void ConvertIntegerArray()
+        {
+            Assert.AreEqual(new int[] { 1, 2 }, _converter.Convert<int[]>("1,2"));
+            Assert.AreEqual(new int[] { 1 }, _converter.Convert<int[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<int[]>(null));
+            Assert.That(() => _converter.Convert<int[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertDateTimeArray()
+        {
+            var now = DateTime.Now;
+            Assert.AreEqual(new DateTime[] { now, now.AddDays(1) }, _converter.Convert<DateTime[]>(now.ToString("O") + "," + now.AddDays(1).ToString("O")));
+            Assert.AreEqual(new DateTime[] { now }, _converter.Convert<DateTime[]>(now.ToString("O")));
+            Assert.AreEqual(null, _converter.Convert<DateTime[]>(null));
+            Assert.That(() => _converter.Convert<DateTime[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertDateTimeOffsetArray()
+        {
+            var now = DateTimeOffset.Now;
+            Assert.AreEqual(new DateTimeOffset[] { now, now.AddDays(1) }, _converter.Convert<DateTimeOffset[]>(now.ToString("O") + "," + now.AddDays(1).ToString("O")));
+            Assert.AreEqual(new DateTimeOffset[] { now }, _converter.Convert<DateTimeOffset[]>(now.ToString("O")));
+            Assert.AreEqual(null, _converter.Convert<DateTimeOffset[]>(null));
+            Assert.That(() => _converter.Convert<DateTimeOffset[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertTimeSpanArray()
+        {
+            Assert.AreEqual(new TimeSpan[] { TimeSpan.FromMinutes(42), TimeSpan.FromMinutes(40) }, _converter.Convert<TimeSpan[]>(TimeSpan.FromMinutes(42).ToString() + "," + TimeSpan.FromMinutes(40).ToString()));
+            Assert.AreEqual(new TimeSpan[] { TimeSpan.FromMinutes(42) }, _converter.Convert<TimeSpan[]>(TimeSpan.FromMinutes(42).ToString()));
+            Assert.AreEqual(null, _converter.Convert<TimeSpan[]>(null));
+            Assert.That(() => _converter.Convert<TimeSpan[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertUnsignedIntegerArray()
+        {
+            Assert.AreEqual(new uint[] { 1, 2 }, _converter.Convert<uint[]>("1,2"));
+            Assert.AreEqual(new uint[] { 1 }, _converter.Convert<uint[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<uint[]>(null));
+            Assert.That(() => _converter.Convert<uint[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertByteArray()
+        {
+            Assert.AreEqual(new byte[] { 1, 2 }, _converter.Convert<byte[]>("1,2"));
+            Assert.AreEqual(new byte[] { 1 }, _converter.Convert<byte[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<byte[]>(null));
+            Assert.That(() => _converter.Convert<byte[]>("256"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertFloatArray()
+        {
+            Assert.AreEqual(new float[] { 1, 2 }, _converter.Convert<float[]>("1,2"));
+            Assert.AreEqual(new float[] { 1 }, _converter.Convert<float[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<float[]>(null));
+            Assert.That(() => _converter.Convert<float[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertDoubleArray()
+        {
+            Assert.AreEqual(new double[] { 1, 2 }, _converter.Convert<double[]>("1,2"));
+            Assert.AreEqual(new double[] { 1 }, _converter.Convert<double[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<double[]>(null));
+            Assert.That(() => _converter.Convert<double[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertLongArray()
+        {
+            Assert.AreEqual(new long[] { 1, 2 }, _converter.Convert<long[]>("1,2"));
+            Assert.AreEqual(new long[] { 1 }, _converter.Convert<long[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<long[]>(null));
+            Assert.That(() => _converter.Convert<long[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertUnsignedLongArray()
+        {
+            Assert.AreEqual(new ulong[] { 1, 2 }, _converter.Convert<ulong[]>("1,2"));
+            Assert.AreEqual(new ulong[] { 1 }, _converter.Convert<ulong[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<ulong[]>(null));
+            Assert.That(() => _converter.Convert<ulong[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertUnsignedShortArray()
+        {
+            Assert.AreEqual(new ushort[] { 1, 2 }, _converter.Convert<ushort[]>("1,2"));
+            Assert.AreEqual(new ushort[] { 1 }, _converter.Convert<ushort[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<ushort[]>(null));
+            Assert.That(() => _converter.Convert<ushort[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertShortArray()
+        {
+            Assert.AreEqual(new short[] { 1, 2 }, _converter.Convert<short[]>("1,2"));
+            Assert.AreEqual(new short[] { 1 }, _converter.Convert<short[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<short[]>(null));
+            Assert.That(() => _converter.Convert<short[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertEnumArray()
+        {
+            Assert.AreEqual(new TestEnum[] { TestEnum.Option1, TestEnum.Option2 }, _converter.Convert<TestEnum[]>("Option1,Option2"));
+            Assert.AreEqual(new TestEnum[] { TestEnum.Option1 }, _converter.Convert<TestEnum[]>("1"));
+            Assert.AreEqual(null, _converter.Convert<TestEnum[]>(null));
+            Assert.That(() => _converter.Convert<TestEnum[]>("1a"), Throws.Exception);
+        }
+
         private enum TestEnum
         {
             Option1 = 1,
