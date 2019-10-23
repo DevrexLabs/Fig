@@ -30,6 +30,7 @@ namespace Fig
             {
                 if (suffix != "" && sd.TryGetValue(key + suffix, out value)) break;
                 if (sd.TryGetValue(key, out value)) break;
+                if (ConcatIndices(sd, key, out value)) break;
             }
 
             return value != null;
@@ -54,6 +55,15 @@ namespace Fig
             TryGetValue(key, env, out var result);
             return result;
         }
-
+        private bool ConcatIndices(SettingsDictionary sd, string key, out string value)
+        {
+            var indices = new List<string>();
+            while (sd.TryGetValue(key + "." + indices.Count, out value))
+            {
+                indices.Add(value);
+            }
+            value = indices.Count == 0 ? null : string.Join(",", indices);
+            return value != null;
+        }
     }
 }

@@ -55,5 +55,29 @@ namespace Fig.Test
             Assert.AreEqual("2", _settingsDictionary["EnvQualified.a:TEST"]);
             Assert.AreEqual("2", _settingsDictionary["EnvQualified.b:TEST"]);
         }
+
+        [Test]
+        public void CanGetArrayFromJsonArrayProperty()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build<AppSettings>(prefix: "");
+
+            var servers = settings.Get<string[]>("Servers");
+            Assert.AreEqual(2, servers.Length);
+            Assert.AreEqual(new string[] { "10.0.0.1", "10.0.0.2" }, servers);
+
+            var serversCommaSeperated = settings.Get<string>("Servers");
+            Assert.AreEqual("10.0.0.1,10.0.0.2", serversCommaSeperated);
+        }
+
+        class AppSettings : Settings
+        {
+            public AppSettings()
+                : base(bindingPath: "")
+            { }
+
+            public string[] Servers => Get<string[]>();
+        }
     }
 }
