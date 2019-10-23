@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -295,15 +295,13 @@ namespace Fig
             if (IsNestedProperty(prop.PropertyType))
             {
                 // Get nested property value via recursion
-                var valObjectResult = this.GetType()
+                var valObjectResult = GetType()
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)
-                    .FirstOrDefault()
+                    .FirstOrDefault(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)?
                     .MakeGenericMethod(prop.PropertyType)
                     .Invoke(this, new object[] { requireAll, name, false, errors });
 
-                var typedResult = valObjectResult as IBindResult;
-                if (typedResult != null)
+                if (valObjectResult is IBindResult typedResult)
                 {
                     if (typedResult.Errors?.Any() ?? false)
                     {
@@ -437,10 +435,9 @@ namespace Fig
 
             if (settingsType != currentType)
             {
-                var bindMethods = settingsType
+                settingsType
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(x => x.Name == nameof(Settings.BindProperties) && x.GetParameters()?.Length == 5)
-                    .FirstOrDefault()
+                    .FirstOrDefault(x => x.Name == nameof(Settings.BindProperties) && x.GetParameters()?.Length == 5)?
                     .MakeGenericMethod(currentType)
                     .Invoke(this, new object[] { this, false, null, true, errors });
             }
