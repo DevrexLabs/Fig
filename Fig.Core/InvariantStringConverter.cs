@@ -15,7 +15,7 @@ namespace Fig
         {
             var typeConverter = TypeDescriptor.GetConverter(targetType);
 
-            if (typeConverter is ArrayConverter && !typeConverter.CanConvertFrom(typeof(string)))
+            if (typeConverter is ArrayConverter)
             {
                 return ConvertToArray(value, targetType);
             }
