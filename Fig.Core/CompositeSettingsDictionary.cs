@@ -57,16 +57,12 @@ namespace Fig
         }
         private bool ConcatIndices(SettingsDictionary sd, string key, out string value)
         {
-            int index = 0;
-            string concatValue = null;
-            value = null;
-            while (sd.TryGetValue(key + "." + index, out value))
+            var indices = new List<string>();
+            while (sd.TryGetValue(key + "." + indices.Count, out value))
             {
-                index++;
-                concatValue += value + ",";
+                indices.Add(value);
             }
-            if (concatValue != null) concatValue = concatValue.TrimEnd(',');
-            value = concatValue;
+            value = indices.Count == 0 ? null : string.Join(",", indices);
             return value != null;
         }
     }
