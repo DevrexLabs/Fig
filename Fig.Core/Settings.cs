@@ -35,6 +35,13 @@ namespace Fig
         /// </summary>
         private string _bindingPath;
 
+        private readonly HashSet<Type> _nonNestedPropertyTypes = new HashSet<Type> {
+            typeof(string),
+            typeof(decimal),
+            typeof(DateTime),
+            typeof(TimeSpan)
+        };
+
         private class CacheEntry
         {
             /// <summary>
@@ -58,6 +65,35 @@ namespace Fig
                 CurrentValue = val;
                 return true;
             }
+        }
+
+        private interface IBindResult
+        {
+            IEnumerable<string> Errors { get; }
+            object Result { get; }
+        }
+
+        private class BindResultBase : IBindResult
+        {
+            public BindResultBase(IEnumerable<string> errors, object result)
+            {
+                Errors = errors;
+                Result = result;
+            }
+            public IEnumerable<string> Errors { get; }
+            public object Result { get; }
+
+            object IBindResult.Result => this.Result;
+        }
+
+        private class BindResult<T> : BindResultBase
+        {
+            public BindResult(List<string> errors, T result) : base(errors, result)
+            {
+                Result = result;
+            }
+
+            public new T Result { get; }
         }
 
         public Settings(string bindingPath = null, IStringConverter converter = null)
@@ -144,9 +180,13 @@ namespace Fig
         /// <typeparam name="T"></typeparam>
         public T Bind<T>(bool requireAll = true, string prefix = null) where T : new()
         {
-            var t = new T();
-            Bind(t, requireAll, prefix);
-            return t;
+            prefix = prefix ?? typeof(T).Name;
+
+            var result = GetBindResult<T>(requireAll, prefix);
+
+            if (result.Errors.Any()) throw new ConfigurationException(result.Errors.ToList());
+
+            return result.Result;
         }
 
         /// <summary>
@@ -159,44 +199,147 @@ namespace Fig
         public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
         {
             prefix = prefix ?? typeof(T).Name;
-            if (prefix.Length > 0) prefix = prefix + ".";
 
-            var props = typeof(T)
-                .GetProperties()
-                .Where(p => !(p.GetSetMethod() is null));
+            var errors = new List<string>();
 
-            foreach (var prop in props)
-            {
-                var type = prop.PropertyType;
-                var name = $"{prefix}{prop.Name}";
-                object value = null;
+            var result = BindProperties(target, requireAll, prefix, false, errors);
 
-                if (!type.IsPrimitive
-                    && !type.IsEnum
-                    && type != typeof(string)
-                    && type != typeof(decimal)
-                    && type != typeof(DateTime))
-                {
-                    value = this.GetType().GetMethods()
-                        .Where(x => x.Name == "Bind" && x.GetParameters()?.Length == 2)
-                        .FirstOrDefault()?
-                        .MakeGenericMethod(type)?
-                        .Invoke(this, new object[] { requireAll, name });
-                }
-                else if (SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
-                {
-                    value = Get(type, name);
-                }
-
-                if (!(value is null)) {
-                    prop.SetValue(
-                        target,
-                        value
-                    );
-                }
-
-            }
+            if (result.Errors.Any()) throw new ConfigurationException(errors);
         }
+
+        private BindResult<T> GetBindResult<T>(bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        {
+            var t = new T();
+            return BindProperties(t, requireAll, prefix, preload, errors);
+        }
+
+        private BindResult<T> BindProperties<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        {
+            errors = errors ?? new List<string>();
+
+            prefix = prefix ?? this._bindingPath;
+
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                try
+                {
+                    if (preload && prop.Name == nameof(Environment)) continue;
+
+                    var readonlyProp = prop.GetSetMethod() is null;
+                    var name = String.IsNullOrEmpty(prefix?.Trim()) ? prop.Name : $"{prefix}.{prop.Name}";
+
+                    // No need to continue if the property is readonly and not part of a preload opertation
+                    if (readonlyProp && !preload) continue;
+
+                    var result = GetPropertyValue(prop, name, preload, requireAll);
+
+                    if (!(result?.Result is null))
+                    {
+                        // When there is a preload and the value is not in the cache yet, do that here
+                        if (preload && !_cache.ContainsKey(name))
+                        {
+                            _cache[name] = new CacheEntry(result.Result);
+                        }
+                        // Otherwise set the value of the property if it is not readonly
+                        else if (!readonlyProp)
+                        {
+                            prop.SetValue(
+                                target,
+                                result.Result
+                            );
+                        }
+                    }
+
+                    if (result?.Errors?.Any() == true)
+                    {
+                        errors.AddRange(result.Errors);
+                    }
+                }
+                catch (TargetInvocationException tie)
+                {
+                    switch (tie.InnerException)
+                    {
+                        case KeyNotFoundException _:
+                            errors.Add(prop.Name + " not found");
+                            break;
+                        case FormatException fe:
+                            errors.Add("Can't parse " + prop.Name);
+                            break;
+                        default:
+                            errors.Add(prop.Name + " failed," + tie.InnerException.Message);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errors.Add(prop.Name + " failed, " + ex.Message);
+                }
+            }
+
+            return new BindResult<T>(errors, target);
+        }
+
+        /// <summary>
+        /// Method to retrieve value either from the settings dictionary or from cache. Uses recursion to get nested class values
+        /// </summary>
+        /// <param name="prop">Property of class that a value is to be returned</param>
+        /// <param name="name">Name of settings dictionary key that is linked to property</param>
+        /// <param name="preload">Determines if the call is from a preload event or not</param>
+        /// <param name="requireAll">Determines if all properties of the binding class should have a matching settings dictionary key and value</param>
+        /// <returns></returns>
+        private IBindResult GetPropertyValue(PropertyInfo prop, string name, bool preload, bool requireAll)
+        {
+            object value = null;
+            var errors = new List<string>();
+
+            if (IsNestedProperty(prop.PropertyType))
+            {
+                // Get nested property value via recursion
+                var valObjectResult = this.GetType()
+                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == nameof(Settings.GetBindResult) && x.GetParameters()?.Length == 4)
+                    .FirstOrDefault()
+                    .MakeGenericMethod(prop.PropertyType)
+                    .Invoke(this, new object[] { requireAll, name, false, errors });
+
+                var typedResult = valObjectResult as IBindResult;
+                if (typedResult != null)
+                {
+                    if (typedResult.Errors?.Any() ?? false)
+                    {
+                        errors.AddRange(typedResult.Errors);
+                    }
+
+                    value = typedResult.Result;
+                }
+            }
+            // When the call is not for a preload event and it is not nested, attempt to get a value
+            else if (preload)
+            {
+                var getter = prop.GetGetMethod();
+                if (getter == null) return null;
+
+                value = getter.Invoke(this, Array.Empty<object>());
+            }
+
+            // When the value is still null, last chance call to check if there is a value in the settings dictionary
+            if (value is null && SettingsDictionary.TryGetValue(name, Environment, out var result) || requireAll)
+            {
+                value = Get(prop.PropertyType, name);
+            }
+
+            return new BindResultBase(errors, value);
+        }
+
+        /// <summary>
+        /// Determines whether the property type provided is a nested class or not
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns>True or False</returns>
+        private bool IsNestedProperty(Type type) =>
+            !type.IsPrimitive
+            && !type.IsEnum
+            && !this._nonNestedPropertyTypes.Contains(type);
 
         /// <summary>
         /// Get as string without any conversion
@@ -261,12 +404,12 @@ namespace Fig
         {
             lock (this)
             {
-                if (_cache.ContainsKey(propertyName))
+                key = GetKey(key, propertyName);
+                if (_cache.ContainsKey(key))
                 {
-                    return _cache[propertyName].CurrentValue;
+                    return _cache[key].CurrentValue;
                 }
 
-                key = GetKey(key, propertyName);
                 if (!SettingsDictionary.TryGetValue(key, Environment, out string value))
                 {
                     if (@default == null) throw new KeyNotFoundException(key);
@@ -286,40 +429,22 @@ namespace Fig
         internal void PreLoad()
         {
             _cache = new Dictionary<string, CacheEntry>(StringComparer.InvariantCultureIgnoreCase);
+
             var errors = new List<string>();
-            foreach (var propertyInfo in GetType().GetProperties())
+
+            var settingsType = typeof(Settings);
+            var currentType = this.GetType();
+
+            if (settingsType != currentType)
             {
-                try
-                {
-                    var name = propertyInfo.Name;
-                    if (name == nameof(Environment)) continue;
-
-                    var getter = propertyInfo.GetGetMethod();
-                    if (getter == null) continue;
-
-                    var val = getter.Invoke(this, Array.Empty<object>());
-                    _cache[name] = new CacheEntry(val);
-                }
-                catch (TargetInvocationException tie)
-                {
-                    switch (tie.InnerException)
-                    {
-                        case KeyNotFoundException _:
-                            errors.Add(propertyInfo.Name + " not found");
-                            break;
-                        case FormatException fe:
-                            errors.Add("Can't parse " + propertyInfo.Name);
-                            break;
-                        default:
-                            errors.Add(propertyInfo.Name + " failed," + tie.InnerException?.Message);
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    errors.Add(propertyInfo.Name + " failed, " + ex.Message);
-                }
+                var bindMethods = settingsType
+                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == nameof(Settings.BindProperties) && x.GetParameters()?.Length == 5)
+                    .FirstOrDefault()
+                    .MakeGenericMethod(currentType)
+                    .Invoke(this, new object[] { this, false, null, true, errors });
             }
+
             if (errors.Any()) throw new ConfigurationException(errors);
         }
 
@@ -337,7 +462,7 @@ namespace Fig
 
             lock (this)
             {
-                var entry = _cache[key];
+                var entry = _cache[GetKey(null, key)];
 
                 if (entry.CurrentValue != null && !entry.CurrentValue.Equals(value))
                 {
