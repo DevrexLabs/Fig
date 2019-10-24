@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using Fig.AppSettingsXml;
 using NUnit.Framework;
 
@@ -32,6 +33,8 @@ namespace Fig.Test
                 ["Key:PROD"] = "PROD",
                 ["Key:TEST"] = "TEST",
                 ["Key:PROD2"] = "PROD",
+                ["ServerIp"] = "127.0.0.1",
+                ["ServerEndPoint"] = "127.0.0.1:80",
 
                 ["env"] = "staging",
                 ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
@@ -190,6 +193,25 @@ namespace Fig.Test
             Assert.AreEqual("Key", propertyChangeNotifications.Single());
         }
 
+        [Test]
+        public void CanRetrieveIPAddressFromSettings()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build<MySettings>(prefix: "");
+
+            Assert.AreEqual(IPAddress.Parse("127.0.0.1"), settings.ServerIp);
+        }
+
+        [Test]
+        public void CanRetrieveIPEndPointFromSettings()
+        {
+            var settings = new SettingsBuilder()
+                .UseSettingsDictionary(_settingsDictionary)
+                .Build<MySettings>(prefix: "");
+
+            Assert.AreEqual(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80), settings.ServerEndPoint);
+        }
     }
 
     class UnresolvedPropertySettings : Settings
@@ -204,6 +226,8 @@ namespace Fig.Test
         { }
 
         public TimeSpan MyTimeSpan => Get<TimeSpan>();
+        public IPAddress ServerIp => Get<IPAddress>();
+        public IPEndPoint ServerEndPoint => Get<IPEndPoint>();
 
         public string Key => Get<string>();
     }
