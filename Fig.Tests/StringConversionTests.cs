@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using NUnit.Framework;
 
 namespace Fig.Test
