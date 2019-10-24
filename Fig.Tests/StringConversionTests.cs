@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
+using System.Net;
 using System.Threading;
 using NUnit.Framework;
 
@@ -250,6 +252,38 @@ namespace Fig.Test
             Assert.AreEqual(new TestEnum[] { TestEnum.Option1 }, _converter.Convert<TestEnum[]>("1"));
             Assert.AreEqual(null, _converter.Convert<TestEnum[]>(null));
             Assert.That(() => _converter.Convert<TestEnum[]>("1a"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertToIPAddress()
+        {
+            Assert.AreEqual(IPAddress.Parse("127.0.0.1"), _converter.Convert<IPAddress>("127.0.0.1"));
+            Assert.AreEqual(null, _converter.Convert<IPAddress>(null));
+        }
+
+        [Test]
+        public void ConvertToIPAddressArray()
+        {
+            Assert.AreEqual(new[] { "127.0.0.1", "18.84.21.3" }.Select(IPAddress.Parse).ToArray(), _converter.Convert<IPAddress[]>("127.0.0.1,18.84.21.3"));
+            Assert.AreEqual(new[] { IPAddress.Parse("127.0.0.1") }, _converter.Convert<IPAddress[]>("127.0.0.1"));
+            Assert.AreEqual(null, _converter.Convert<IPAddress[]>(null));
+            Assert.That(() => _converter.Convert<IPAddress[]>("localhost"), Throws.Exception);
+        }
+
+        [Test]
+        public void ConvertToIPEndPoint()
+        {
+            Assert.AreEqual(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80), _converter.Convert<IPEndPoint>("127.0.0.1:80"));
+            Assert.AreEqual(null, _converter.Convert<IPEndPoint>(null));
+        }
+
+        [Test]
+        public void ConvertToIPEndPointArray()
+        {
+            Assert.AreEqual(new[] { "127.0.0.1", "18.84.21.3" }.Select(IPAddress.Parse).Select(a => new IPEndPoint(a, 80)).ToArray(), _converter.Convert<IPEndPoint[]>("127.0.0.1:80,18.84.21.3:80"));
+            Assert.AreEqual(new[] { new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80) }, _converter.Convert<IPEndPoint[]>("127.0.0.1:80"));
+            Assert.AreEqual(null, _converter.Convert<IPEndPoint[]>(null));
+            Assert.That(() => _converter.Convert<IPEndPoint[]>("localhost:a8"), Throws.Exception);
         }
 
         private enum TestEnum
