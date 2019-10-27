@@ -1,9 +1,11 @@
+using System.Text;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using ConsoleTables;
 
 namespace Fig
 {
@@ -103,6 +105,59 @@ namespace Fig
             _cache = new Dictionary<string, CacheEntry>(comparer);
             SetBindingPath(bindingPath);
             Environment = "";
+        }
+
+        /// <summary>
+        /// Diagnostic report as string representation of current configuration and source for each property.
+        /// </summary>
+        public string Report()
+        {
+            var reportBuilder = new StringBuilder(
+                $"[{this.GetType().Name} Diagnostic Report]{System.Environment.NewLine}{System.Environment.NewLine}");
+            var keyTrackingValues = new Dictionary<string, (string, string)>();
+            var defaultKeyValuePair = new KeyValuePair<string, (string, string)>();
+
+            foreach (var k in SettingsDictionary.Keys)
+            {
+                var keyEnvironment = k.Contains(":")
+                    ? k.Split(':').Skip(1).LastOrDefault() ?? String.Empty
+                    : String.Empty;
+                var key = (keyEnvironment == String.Empty)
+                    ? k
+                    : k.Substring(0, k.Length - keyEnvironment.Length - 1);
+
+                if (SettingsDictionary.TryGetValue(key, Environment, out var value))
+                {
+                    var environment = (keyEnvironment == Environment) ? keyEnvironment : String.Empty;
+                    var foundKvp = keyTrackingValues.FirstOrDefault((_k) => _k.Key.ToUpper() == key.ToUpper());
+
+                    if (!foundKvp.Equals(defaultKeyValuePair))
+                    {
+                        var (trackedEnviroment, trackedValue) = foundKvp.Value;
+
+                        if (trackedEnviroment == String.Empty && environment != String.Empty)
+                        {
+                            keyTrackingValues[foundKvp.Key] = (environment, trackedValue);
+                        }
+
+                        continue;
+                    }
+
+                    keyTrackingValues.Add(key, (environment, value));
+                }
+            }
+
+            var table = new ConsoleTable("Key", "Value", "Enviroment");
+
+            foreach (var kvp in keyTrackingValues)
+            {
+                var (environment, value) = kvp.Value;
+                table.AddRow(kvp.Key, value, environment);
+            }
+
+            reportBuilder.Append(table.ToString());
+
+            return reportBuilder.ToString();
         }
 
         private string GetBindingPath()
