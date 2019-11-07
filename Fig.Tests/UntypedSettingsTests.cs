@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -75,5 +77,38 @@ namespace Fig.Test
             var actual = _settings.Get("missing", () => expected);
             Assert.AreEqual(actual, expected);
         }
+
+        [Test]
+        public void WhenReportReturnsValue()
+        {
+            var report = this._settings.Report();
+            var hasValue = !String.IsNullOrWhiteSpace(report);
+
+            Assert.IsTrue(hasValue);
+        }
+
+        [Test]
+        public void WhenEnvironmentAndReportReturnsValue()
+        {
+            _settings.SetEnvironment("test");
+            var report = this._settings.Report();
+            var hasValue = report
+                .Split(System.Environment.NewLine)
+                .Any(l => l.Contains("| a.b                  | a.b:test | test       |"));
+
+            Assert.IsTrue(hasValue);
+        }
+
+        [Test]
+        public void WhenNoEnvironmentAndReportReturnsValue()
+        {
+            var report = this._settings.Report();
+            var hasValue = report
+                .Split(System.Environment.NewLine)
+                .Any(l => l.Contains("| a.b                  | a.b      |            |"));
+
+            Assert.IsTrue(hasValue);
+        }
+
     }
 }
