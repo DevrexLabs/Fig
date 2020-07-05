@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 
 namespace Fig.Test
@@ -76,7 +77,37 @@ namespace Fig.Test
             Assert.IsTrue(found);
             Assert.AreEqual("b", result);
         }
-        
+
+        [Test]
+        public void AsString()
+        {
+            var cd = new CompositeSettingsDictionary();
+            var first = new SettingsDictionary()
+            {
+                ["a"] = "b",
+            };
+            var second = new SettingsDictionary()
+            {
+                ["c:prod"] = "d"
+            };
+            cd.Add(first);
+            cd.Add(second);
+            
+            var settings = new Settings(cd);
+            var toString = settings.ToString();
+            
+            Console.WriteLine(toString);
+            
+            Assert.AreEqual(toString, cd.AsString());
+
+            Assert.True(toString.Contains("- Layer 0 -"));
+            Assert.True(toString.Contains("- Layer 1 -"));
+            Assert.True(toString.Contains("| a "));
+            Assert.True(toString.Contains("| b "));
+            Assert.True(toString.Contains("| c:prod "));
+            Assert.True(toString.Contains("| d "));
+        }
+
         [Test]
         public void KeyTransformation()
         {

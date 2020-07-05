@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Fig
@@ -48,6 +50,42 @@ namespace Fig
             var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             return regex.Replace(template, m => GetCurrentEnvironment(m, configuration));
         }
+
+        public string AsString()
+        {
+            var maxWidths = new int[2];
+            maxWidths[0] = _dictionaries.SelectMany(d => d.Keys).Max(k => k.Length) + 1;
+            maxWidths[1] = _dictionaries.SelectMany(d => d.Values).Max(k => k.Length);
+            var minWidth = 22;
+            var colWidths = new int[2]
+            {
+                Math.Max(minWidth, maxWidths[0]),
+                Math.Max(minWidth, maxWidths[1])
+            };
+            
+            var sb = new StringBuilder();
+            for (var layer = 0; layer < _dictionaries.Count; layer++)
+            {
+                var header = (" Layer " + layer + " ")
+                    .PadLeft(colWidths[0] + 7, '-')
+                    .PadRight(colWidths[0] + 7 + colWidths[1], '-');
+
+                sb.AppendLine(header);
+                foreach (var pair in _dictionaries[layer])
+                {
+                    sb.Append("| ");
+                    var keyWithPadding = pair.Key.PadRight(colWidths[0]);
+                    sb.Append(keyWithPadding);
+                    sb.Append(" | ");
+                    var valWithPadding = pair.Value.PadRight(colWidths[1]);
+                    sb.Append(valWithPadding);
+                    sb.AppendLine(" |");
+                }
+            }
+
+            return sb.ToString();
+        }
+
         private string GetCurrentEnvironment(Match m, string configuration)
         {
             var key = m.Groups["key"]. Value;
@@ -55,6 +93,7 @@ namespace Fig
             TryGetValue(key, env, out var result);
             return result;
         }
+
         private bool ConcatIndices(SettingsDictionary sd, string key, out string value)
         {
             var indices = new List<string>();

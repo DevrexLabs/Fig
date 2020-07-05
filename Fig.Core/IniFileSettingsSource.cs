@@ -60,8 +60,6 @@ namespace Fig.Core
             return key;
         }
 
-
-
         protected override IEnumerable<(string, string)> GetSettings()
         {
             foreach (var (key, value) in Parse(_lines))

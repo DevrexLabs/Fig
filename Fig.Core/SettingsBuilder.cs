@@ -1,15 +1,12 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using Fig.Core;
 
 namespace Fig
 {
     public class SettingsBuilder
     {
-        private CompositeSettingsDictionary _compositeDictionary
+        private readonly CompositeSettingsDictionary _compositeDictionary
             = new CompositeSettingsDictionary();
 
         private string _environment = "";

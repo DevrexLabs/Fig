@@ -26,7 +26,7 @@ namespace Fig
         /// <summary>
         /// Component that can convert strings to various types, pluggable
         /// </summary>
-        private IStringConverter _converter;
+        private readonly IStringConverter _converter;
 
         /// <summary>
         /// Path to the node in the tree to bind to for example:
@@ -42,13 +42,19 @@ namespace Fig
             typeof(TimeSpan)
         };
 
+        public override String ToString()
+        {
+            if (SettingsDictionary is null) return base.ToString();
+            return SettingsDictionary.AsString();
+        }
+ 
         private class CacheEntry
         {
             /// <summary>
             /// The value as read from the underlying source.
             /// Not used
             /// </summary>
-            public readonly object OriginalValue;
+            private readonly object OriginalValue;
 
             public object CurrentValue;
 
@@ -96,7 +102,7 @@ namespace Fig
             public new T Result { get; }
         }
 
-        public Settings(string bindingPath = null, IStringConverter converter = null)
+        protected Settings(string bindingPath = null, IStringConverter converter = null)
         {
             _converter = converter ?? new InvariantStringConverter();
             var comparer = StringComparer.InvariantCultureIgnoreCase;
@@ -342,7 +348,8 @@ namespace Fig
         /// <summary>
         /// Get as string without any conversion
         /// </summary>
-        public string Get(string key, Func<string> @default = null) => Get<string>(key, @default);
+        public string Get(string key, Func<string> @default = null)
+            => Get<string>(key, @default);
 
         /// <summary>
         /// Get the string for a given key and convert to the desired type
