@@ -7,11 +7,11 @@
     <Title>Fig.AppSettingsXml</Title>
     <Authors>Robert Friberg et al</Authors>
     <Description>Fig support for web.config or app.config in .NET Framework</Description>
-    <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
-    <PackageReleaseNotes>initial beta release, please report any bugs</PackageReleaseNotes>
+    <PackageReleaseNotes>updated nuget dependencies</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
     <Copyright>Robert Friberg et al</Copyright>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

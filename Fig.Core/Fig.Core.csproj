@@ -9,10 +9,10 @@
     <Title>Fig</Title>
     <Authors>Robert Friberg et al</Authors>
     <Description>A library to help you load and access configuration data from files, environment variables and the command line.</Description>
-    <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
     <Copyright>Robert Friberg et al</Copyright>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />

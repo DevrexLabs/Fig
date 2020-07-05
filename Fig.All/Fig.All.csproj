@@ -5,12 +5,14 @@
         <PackageVersion>1.2.0</PackageVersion>
         <Title>Fig.All</Title>
         <Authors>Robert Friberg et al</Authors>
-        <Description>All of the libraries in a single nuget package for your convenience</Description>
+        <Description>All of the Fig libraries in a single nuget package for your convenience</Description>
         <Copyright>Robert Friberg et al</Copyright>
-        <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-        <PackageLicenseUrl></PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
+        <Copyright>Robert Friberg et al</Copyright>
+        <PackageReleaseNotes>Updated nugets, dump config as string</PackageReleaseNotes>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>

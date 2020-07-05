@@ -7,10 +7,11 @@
         <Authors>Robert Friberg et al</Authors>
         <Copyright>Robert Friberg et al</Copyright>
         <Title>Fig.AppSettingsJson</Title>
-        <Description>Fig configuration source provider for appSettins.json files</Description>
-        <PackageProjectUrl>https://github.com/rofr/fig</PackageProjectUrl>
-        <PackageLicenseUrl></PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/rofr/fig</RepositoryUrl>
+        <Description>Fig configuration source provider for appSettings.json files</Description>
+        <PackageReleaseNotes>Update nuget dependencies</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
