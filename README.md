@@ -2,10 +2,9 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig) [![Join the chat at https://gitter.im/DevrexLabs/Fig](https://badges.gitter.im/DevrexLabs/Fig.svg)](https://gitter.im/DevrexLabs/Fig?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Fig
 
-A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it
-in a structured, type safe manner.
+A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it in a structured, type safe manner. The README is the documentation.
 
-Do you have code like the following spread around your code base?
+Do you have code like the following sprinkledacross your code base?
 
 ```c#
    var settingString = ConfigurationManager.AppSettings["CoffeeRefillIntervalInMinutes"];
@@ -13,7 +12,13 @@ Do you have code like the following spread around your code base?
    var coffeeInterval = TimeSpan.FromMinutes(Int32.Parse(setting));
 ```
 
-Fig can help you keep this nice and clean:
+This kind of code has multiple issues:
+* Single source of configuration data, the App- or Web.config file
+* Handling defaults, mandatory or optional settings
+* Handling type conversion and validation
+* Different values for different environments: TEST,DEV,PROD,STAGING etc
+
+Fig can help you adress these issues using a consistent API across .NET Framework and .NET Core.
 
 ```c#
   var settings = new SettingsBuilder()
@@ -26,11 +31,13 @@ Fig can help you keep this nice and clean:
   // provide a default for optional settings
   var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));
 ```
-## Using custom types
+
+## Binding to custom types
+The example above uses a string key "CoffeeRefillIntervall". You might want to define your own custom settings class with strongly typed properties.
 
 If you prefer a typed class there are 2 options:
 * inherit from `Fig.Settings`
-* Bind to a POCO (work in progress)
+* Bind to a POCO
 
 Here is the first approach:
 
@@ -58,7 +65,6 @@ Here is the first approach:
 
 ## Binding to POCOs
 If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
-(work in progress)
 
 ```c#
    public class CoffeeShopSettings
@@ -185,13 +191,13 @@ Datasource.A.connectionstring
 # Combining sources
 Use the `SettingsBuilder` to add sources in order of precedence. 
 Settings in above layers override settings with the same key in
-lower layers.
+lower layers. Note that this is the opposite order of `Microsoft.Extensions.Configuration`
 
 ```c#
    var settings = new SettingsBuilder()
     .UseCommandLine(args)
     .UseEnvironmentVariables()
-    .UseAppSettingsJson("appSettings.${ENV}.json, optional:true)
+    .UseAppSettingsJson("appSettings.${ENV}.json", optional:true)
     .UseAppSettingsJson("appSettings.json")
     .Build<Settings>();
 ```
@@ -217,13 +223,13 @@ You can also qualify an  entire section of an ini or json file:
 ```json
   {
      "Network:PROD" : {
-        "ip" : "10.0.0.1",
-	"port" : 3001
+      "ip" : "10.0.0.1",
+	   "port" : 3001
      }
 
      "Network:TEST" : {
-        "ip" : "127.0.0.1",
-	"port" : 13001
+      "ip" : "127.0.0.1",
+	   "port" : 13001
      }
   }
 ```
@@ -269,9 +275,24 @@ Install-Package Fig.AppSettingsXml
 Install-Package Fig.AppSettingsJson
 
 ```
+
+## What do I have?
+`Settings.ToString()` is your friend. It will return a plain-text formatted table
+with keys and values of each layer:
+```
+-------------------- Layer 0 ----------------------
+| Network.ip:TEST        | 127.0.0.1              |
+| Network.port:TEST      | 13001                  |
+-------------------- Layer 1 ----------------------
+| Network.ip:PROD        | 10.0.0.1               |
+| Network.port:PROD      | 3001                   |
+---------------------------------------------------
+```
+
+
 ## Creating custom sources
-* Inherit from `SettingsSource` and override `GetSettings()` 
-* Create an extension method for the `SettingsBuilder`
+1. Create a class that inherits from `SettingsSource` and overrides `GetSettings()` 
+2. Create an extension method for the `SettingsBuilder`
 
 ```c#
 public class MySource : SettingsSource
@@ -288,7 +309,7 @@ public static class MySettingsBuilderExtensions
    {
       var mySource = new MySource();
       var dictionary = mySource.ToSettingsDictionary();
-      return builder.Use(dictionary);
+      return builder.UseSettingsDictionary(dictionary);
    }
 }
 ``` 
