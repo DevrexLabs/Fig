@@ -83,6 +83,8 @@ namespace Fig
                 }
             }
 
+            sb.AppendLine("-".PadRight(colWidths.Sum(w => w) + 7, '-'));
+
             return sb.ToString();
         }
 

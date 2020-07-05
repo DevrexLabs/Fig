@@ -98,14 +98,13 @@ namespace Fig.Test
             
             Console.WriteLine(toString);
             
-            Assert.AreEqual(toString, cd.AsString());
-
-            Assert.True(toString.Contains("- Layer 0 -"));
-            Assert.True(toString.Contains("- Layer 1 -"));
-            Assert.True(toString.Contains("| a "));
-            Assert.True(toString.Contains("| b "));
-            Assert.True(toString.Contains("| c:prod "));
-            Assert.True(toString.Contains("| d "));
+            var expected =   "-------------------- Layer 0 ----------------------\n"
+                           + "| a                      | b                      |\n"
+                           + "-------------------- Layer 1 ----------------------\n"
+                           + "| c:prod                 | d                      |\n"
+                           + "---------------------------------------------------\n";
+            
+            Assert.AreEqual(expected, toString);
         }
 
         [Test]

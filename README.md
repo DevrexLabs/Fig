@@ -279,6 +279,7 @@ Install-Package Fig.AppSettingsJson
 ## What do I have?
 `Settings.ToString()` is your friend. It will return a plain-text formatted table
 with keys and values of each layer:
+
 ```
 -------------------- Layer 0 ----------------------
 | Network.ip:TEST        | 127.0.0.1              |
