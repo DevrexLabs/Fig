@@ -202,7 +202,7 @@ namespace Fig
         /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
         /// <param name="prefix">Defaults typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public void Bind<T>(T target, bool requireAll = true, string prefix = null) where T : new()
+        public void Bind<T>(T target, bool requireAll = true, string prefix = null)
         {
             prefix = prefix ?? typeof(T).Name;
 
@@ -219,11 +219,11 @@ namespace Fig
             return BindProperties(t, requireAll, prefix, preload, errors);
         }
 
-        private BindResult<T> BindProperties<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null) where T : new()
+        private BindResult<T> BindProperties<T>(T target, bool requireAll = true, string prefix = null, bool preload = false, List<string> errors = null)
         {
             errors = errors ?? new List<string>();
 
-            prefix = prefix ?? this._bindingPath;
+            prefix = prefix ?? _bindingPath;
 
             foreach (var prop in typeof(T).GetProperties())
             {
@@ -234,8 +234,10 @@ namespace Fig
                     var readonlyProp = prop.GetSetMethod() is null;
                     var name = String.IsNullOrEmpty(prefix?.Trim()) ? prop.Name : $"{prefix}.{prop.Name}";
 
-                    // No need to continue if the property is readonly and not part of a preload opertation
+                    // No need to continue if the property is readonly and not part of a preload operation
                     if (readonlyProp && !preload) continue;
+
+                    if (prop.PropertyType.IsAbstract || prop.PropertyType.IsInterface) continue;
 
                     var result = GetPropertyValue(prop, name, preload, requireAll);
 

@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using System.Collections;
 using NUnit.Framework;
 
 namespace Fig.Test
@@ -11,7 +10,7 @@ namespace Fig.Test
         [SetUp]
         public void Setup()
         {
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname",
@@ -24,7 +23,7 @@ namespace Fig.Test
         [Test]
         public void WhenBindReturnsValue()
         {
-            var testClass = this._settings.Bind<TestClass>();
+            var testClass = _settings.Bind<TestClass>();
 
             Assert.AreEqual("Fullname", testClass.Name);
             Assert.AreEqual(40, testClass.Age);
@@ -34,27 +33,27 @@ namespace Fig.Test
         [Test]
         public void WhenBindAndMissingSettingsPropertyThrowsException()
         {
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname"
                 })
                 .Build();
 
-            Assert.Throws<ConfigurationException>(() => this._settings.Bind<TestClass>());
+            Assert.Throws<ConfigurationException>(() => _settings.Bind<TestClass>());
         }
 
         [Test]
-        public void WhenBindWithAllPropertiesNotRequiredAndMissingSettingsPropertyThrowsException()
+        public void CanBindWhenPropertiesMissingAndNotRequireAll()
         {
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{nameof(TestClass)}.{nameof(TestClass.Name)}"] = "Fullname"
                 })
                 .Build();
 
-            var testClass = this._settings.Bind<TestClass>(false);
+            var testClass = _settings.Bind<TestClass>(requireAll: false);
 
             Assert.AreEqual("Fullname", testClass.Name);
             Assert.AreEqual(0, testClass.Age);
@@ -64,16 +63,18 @@ namespace Fig.Test
         [Test]
         public void WhenBindWithNestedClassPropertyReturnsValue()
         {
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Name)}"] = "Fullname",
-                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.FlagOne)}"] = "false",
-                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.TestEnum)}"] = "Two"
+                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.FlagOne)}"]
+                        = "false",
+                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.TestEnum)}"]
+                        = "Two"
                 })
                 .Build();
 
-            var testClass = this._settings.Bind<TestClassWithNestedClass>(false);
+            var testClass = _settings.Bind<TestClassWithNestedClass>(false);
 
             Assert.AreEqual("Fullname", testClass.Name);
             Assert.AreEqual(false, testClass.Flags.FlagOne);
@@ -89,7 +90,7 @@ namespace Fig.Test
             var expectedValue = "FullnameTest";
 
 
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{propertyName}"] = "Fullname",
@@ -97,15 +98,14 @@ namespace Fig.Test
                 })
                 .Build();
 
-            this._settings.SetEnvironment(environment);
+            _settings.SetEnvironment(environment);
 
-            var testClass = this._settings.Bind<TestClass>(false);
+            var testClass = _settings.Bind<TestClass>(false);
 
             Assert.AreEqual(expectedValue, testClass.Name);
         }
 
         [Test]
-
         public void WhenEnvironmentNotSetAndBindReturnsValue()
         {
             var environment = "TEST";
@@ -113,7 +113,7 @@ namespace Fig.Test
             var expectedValue = "Fullname";
 
 
-            this._settings = new SettingsBuilder()
+            _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{propertyName}"] = expectedValue,
@@ -121,9 +121,25 @@ namespace Fig.Test
                 })
                 .Build();
 
-            var testClass = this._settings.Bind<TestClass>(false);
+            var testClass = _settings.Bind<TestClass>(false);
 
             Assert.AreEqual(expectedValue, testClass.Name);
+        }
+
+
+        [Test]
+        public void WhenBindAbstractPropertyTypeAreIgnored()
+        {
+            _settings = new SettingsBuilder().Build();
+            Assert.DoesNotThrow(() =>_settings.Bind<ClassWithAbstractPropertyTypes>());
+        }
+
+        private abstract class AbstractClass {}
+
+        private class ClassWithAbstractPropertyTypes
+        {
+            public AbstractClass AbstractProperty { get; set; }
+            public IList List { get; set; }
         }
 
         private class TestClass
