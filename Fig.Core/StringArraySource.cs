@@ -8,11 +8,9 @@ namespace Fig
     {
         private readonly Regex _parser;
         private readonly string[] _args;
-        private readonly string _prefix;
         
         public StringArraySource(string[] args, string prefix, char delimiter)
         {
-            _prefix = prefix;
             _args = args;
             var pattern = 
                 "^" + 

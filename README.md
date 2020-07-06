@@ -188,6 +188,58 @@ Datasource.A.name
 Datasource.A.connectionstring
 ```
 
+## Environment variables
+Given these environment variables:
+```bash
+export ENV=TEST
+export FIG_TIMEOUT=30
+export FIG_LOGGING_LOGLEVEL_DEFAULT=Warning
+export MYAPP_COLOR=Red
+export MYAPP_ENDPOINT=10.0.0.1:3001
+```
+`builder.UseEnvironmentVariables(prefix: "FIG_", dropPrefix:true)` yields:
+```
+TIMEOUT
+LOGGING.LOGLEVEL.DEFAULT
+```
+`builder.UseEnvironmentVariables(prefix: "MYAPP_", dropPrefix:false)` yields:
+```
+MYAPP.COLOR
+MYAPP.ENDPOINT
+```
+
+`builder.UseEnvironmentVariables()` yields:
+```
+ENV
+FIG.TIMEOUT
+FIG.LOGGING.LOGLEVEL.DEFAULT
+MYAPP.COLOR
+MYAPP.ENDPOINT
+```
+
+
+## Command line
+Fig can take key/value paires passed on the command line. The default prefix is "--fig:" and default separator is "="
+```c#
+//Given
+string[] args = new []{
+   "--fig:ENV=Test",
+   "--fig:Timeout=30",
+   "retries=3"};
+```
+
+`settingsBuilder.UseCommandLine(args)` yields:
+
+```
+ENV
+Timeout
+```
+
+and `settingsBuilder.UseCommandLine(args, prefix: "")` yields:
+```
+retries
+``` 
+
 # Combining sources
 Use the `SettingsBuilder` to add sources in order of precedence. 
 Settings in above layers override settings with the same key in
@@ -196,7 +248,7 @@ lower layers. Note that this is the opposite order of `Microsoft.Extensions.Conf
 ```c#
    var settings = new SettingsBuilder()
     .UseCommandLine(args)
-    .UseEnvironmentVariables()
+    .UseEnvironmentVariables(prefix: "FIG_", dropPrefix:false)
     .UseAppSettingsJson("appSettings.${ENV}.json", optional:true)
     .UseAppSettingsJson("appSettings.json")
     .Build<Settings>();

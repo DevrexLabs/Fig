@@ -7,22 +7,24 @@ namespace Fig.Core
 {
     public class EnvironmentVarsSettingsSource : SettingsSource
     {
-        private string _prefix;
-        private char _separator;
+        private readonly string _prefix;
+
+        private const char Separator = '_';
         
-        private IDictionary _vars;
+        private readonly bool _dropPrefix;
+        private readonly IDictionary _vars;
         
         
-        public EnvironmentVarsSettingsSource(string prefix = "", char separator = '_')
-            :this(Environment.GetEnvironmentVariables(), prefix, separator)
+        public EnvironmentVarsSettingsSource(string prefix, bool dropPrefix)
+            :this(Environment.GetEnvironmentVariables(), prefix, dropPrefix)
         {
         }
 
-        internal EnvironmentVarsSettingsSource(IDictionary vars, string prefix = "", char separator = '_')
+        internal EnvironmentVarsSettingsSource(IDictionary vars, string prefix, bool dropPrefix)
         {
             _vars = vars;
             _prefix = prefix;
-            _separator = separator;
+            _dropPrefix = dropPrefix;
         }
         
         /// <summary>
@@ -38,9 +40,9 @@ namespace Fig.Core
             
             foreach (var key in filteredKeys)
             {
-                var transformedKey = key
-                    .Remove(0, _prefix.Length)
-                    .Replace('_', '.');
+                var transformedKey = key;
+                if (_dropPrefix) transformedKey = key.Remove(0, _prefix.Length);
+                transformedKey = transformedKey.Replace(Separator, '.');
 
                 yield return (transformedKey, (string) _vars[key]);
             }

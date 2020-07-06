@@ -12,9 +12,9 @@ namespace Fig
         private string _environment = "";
 
         /// <summary>
-        /// Where to look for files
+        /// Where to look for files, default is current working directory
         /// </summary>
-        private string _basePath;
+        private string _basePath = "";
 
         public Settings Build()
         {
@@ -46,9 +46,17 @@ namespace Fig
             return this;
         }
 
-        public SettingsBuilder UseEnvironmentVariables(string prefix)
+        /// <summary>
+        /// Add all the current environment variables that start with a given prefix
+        /// <remarks>The path separator (default is _) will be translated to a dot</remarks>
+        /// </summary>
+        /// <param name="prefix">For example FIG_, default is no prefix. </param>
+        /// <param name="separator">Default is _</param>
+        /// <param name="dropPrefix">When true, the prefix will not be included in the key</param>
+        /// <returns></returns>
+        public SettingsBuilder UseEnvironmentVariables(string prefix = "", bool dropPrefix = true)
         {
-            Add(new EnvironmentVarsSettingsSource(prefix).ToSettingsDictionary());
+            Add(new EnvironmentVarsSettingsSource(prefix, dropPrefix).ToSettingsDictionary());
             return this;
         }
 
@@ -66,7 +74,7 @@ namespace Fig
                 var source = sourceFactory.Invoke(fullPath);
                 Add(source.ToSettingsDictionary());
             }
-            else if (required) throw new FileNotFoundException("No such file", fullPath);
+            else if (required) throw new FileNotFoundException("No such file: " + fullPath, fullPath);
 
         }
 
