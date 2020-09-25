@@ -54,8 +54,8 @@ namespace Fig
         public string AsString()
         {
             var maxWidths = new int[2];
-            maxWidths[0] = _dictionaries.SelectMany(d => d.Keys).Max(k => k.Length) + 1;
-            maxWidths[1] = _dictionaries.SelectMany(d => d.Values).Max(k => k.Length);
+            maxWidths[0] = _dictionaries.SelectMany(d => d.Keys).MaxOrDefault(k => k.Length) + 1;
+            maxWidths[1] = _dictionaries.SelectMany(d => d.Values).MaxOrDefault(k => k.Length);
             var minWidth = 22;
             var colWidths = new int[2]
             {
@@ -83,7 +83,11 @@ namespace Fig
                 }
             }
 
-            sb.AppendLine("-".PadRight(colWidths.Sum(w => w) + 7, '-'));
+            // Only append a line, if there was data in the dictionary.
+            if (_dictionaries.Count > 0)
+            {
+                sb.AppendLine("-".PadRight(colWidths.Sum(w => w) + 7, '-'));
+            }
 
             return sb.ToString();
         }

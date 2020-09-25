@@ -97,14 +97,22 @@ namespace Fig.Test
             var toString = settings.ToString();
             
             Console.WriteLine(toString);
-            
-            var expected =   "-------------------- Layer 0 ----------------------\n"
-                           + "| a                      | b                      |\n"
-                           + "-------------------- Layer 1 ----------------------\n"
-                           + "| c:prod                 | d                      |\n"
-                           + "---------------------------------------------------\n";
-            
+
+            var expected =   "-------------------- Layer 0 ----------------------" + Environment.NewLine
+                           + "| a                      | b                      |" + Environment.NewLine
+                           + "-------------------- Layer 1 ----------------------" + Environment.NewLine
+                           + "| c:prod                 | d                      |" + Environment.NewLine
+                           + "---------------------------------------------------" + Environment.NewLine;
+
             Assert.AreEqual(expected, toString);
+        }
+
+        [Test]
+        public void EmptyCompositeDictionaryAsStringReturnsCorrectResult()
+        {
+            var settingsString = new CompositeSettingsDictionary()
+                .AsString();
+            Assert.AreEqual(string.Empty, settingsString);
         }
 
         [Test]
