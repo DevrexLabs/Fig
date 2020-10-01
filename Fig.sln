@@ -1,21 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.Core", "Fig.Core\Fig.Core.csproj", "{69520B02-715D-4140-BEB3-A4A8D0DA8E7D}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30523.141
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fig.Core", "Fig.Core\Fig.Core.csproj", "{69520B02-715D-4140-BEB3-A4A8D0DA8E7D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{46A2C870-34F5-4EA3-83E4-835ADC219C0D}"
 	ProjectSection(SolutionItems) = preProject
-		README.MD = README.MD
 		appveyor.yml = appveyor.yml
+		README.MD = README.MD
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.Tests", "Fig.Tests\Fig.Tests.csproj", "{84007214-8D91-4FB6-9A0D-11162AB792E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fig.Tests", "Fig.Tests\Fig.Tests.csproj", "{84007214-8D91-4FB6-9A0D-11162AB792E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.AppSettingsXml", "Fig.AppSettingsXml\Fig.AppSettingsXml.csproj", "{DC6F740C-F5DE-4230-AF6E-1BA243C4F95A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fig.AppSettingsXml", "Fig.AppSettingsXml\Fig.AppSettingsXml.csproj", "{DC6F740C-F5DE-4230-AF6E-1BA243C4F95A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.AppSettingsJson", "Fig.AppSettingsJson\Fig.AppSettingsJson.csproj", "{D51AF7ED-8BBA-451D-8601-B25BBB507450}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fig.AppSettingsJson", "Fig.AppSettingsJson\Fig.AppSettingsJson.csproj", "{D51AF7ED-8BBA-451D-8601-B25BBB507450}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.All", "Fig.All\Fig.All.csproj", "{2F65DA14-1E43-4184-9D51-FBFE047788DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fig.All", "Fig.All\Fig.All.csproj", "{2F65DA14-1E43-4184-9D51-FBFE047788DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fig.SqlSettings", "Fig.SqlSettings\Fig.SqlSettings.csproj", "{847E6C34-027C-438F-9903-892E671A5154}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,5 +47,15 @@ Global
 		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F65DA14-1E43-4184-9D51-FBFE047788DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{847E6C34-027C-438F-9903-892E671A5154}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{847E6C34-027C-438F-9903-892E671A5154}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{847E6C34-027C-438F-9903-892E671A5154}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{847E6C34-027C-438F-9903-892E671A5154}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FAC9DBD7-DC9A-47EE-B00F-7F857A83991A}
 	EndGlobalSection
 EndGlobal
