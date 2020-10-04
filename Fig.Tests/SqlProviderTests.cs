@@ -20,7 +20,7 @@ namespace Fig.Test
         {
             using (var con = GetPrefilledMemoryDatabase())
             {
-                _settings = new SqlSettingsSource(con, new SQLiteCommand("SELECT Key, Value FROM Settings", con));
+                _settings = new SqlSettingsSource("", "", "SELECT Key, Value FROM Settings");
             }  
         }
 
