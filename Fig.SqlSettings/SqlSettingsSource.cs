@@ -6,18 +6,30 @@ namespace Fig.SqlSettings
     public class SqlSettingsSource : SettingsSource
     {
         private readonly Dictionary<string, string> _sqlSettingsDictionary;
+        private readonly IDbConnection _connection;
+        private readonly IDbCommand _command;
 
         public SqlSettingsSource(IDbConnection connection, IDbCommand command)
         {
             _sqlSettingsDictionary = new Dictionary<string, string>();
+            _connection = connection;
+            _command = command;
+        }
 
-            var stateWasClosed = connection.State == ConnectionState.Closed;
-            if (stateWasClosed)
+        /// <summary>
+        /// Opens a database connection to retrieve the settings.
+        /// Connection will only be closed if the initial state of the connection was closed.
+        /// </summary>
+        /// <returns></returns>
+        protected override IEnumerable<(string, string)> GetSettings()
+        {
+            var wasClosed = _connection.State == ConnectionState.Closed;
+            if (wasClosed)
             {
-                connection.Open();
+                _connection.Open();
             }
 
-            using (IDataReader reader = command.ExecuteReader())
+            using (IDataReader reader = _command.ExecuteReader())
             {
                 while (reader.Read())
                 {
@@ -26,14 +38,11 @@ namespace Fig.SqlSettings
                 }
             }
 
-            if (stateWasClosed)
+            if (wasClosed)
             {
-                connection.Close();
+                _connection.Close();
             }
-        }
 
-        protected override IEnumerable<(string, string)> GetSettings()
-        {
             foreach (var setting in _sqlSettingsDictionary)
                 yield return (setting.Key, setting.Value);
         }
