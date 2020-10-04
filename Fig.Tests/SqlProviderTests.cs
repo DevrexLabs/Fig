@@ -51,7 +51,7 @@ namespace Fig.Test
                     cmd.ExecuteNonQuery();
                 }
             }
-            // con must remain open, because 'in memory' db ceased to exist as soon as it's closed
+            // con must remain open, because 'in memory' db ceases to exist as soon as it's closed
             return con;
         }
     }
