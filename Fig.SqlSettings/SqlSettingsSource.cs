@@ -8,12 +8,14 @@ namespace Fig.SqlSettings
         private readonly Dictionary<string, string> _sqlSettingsDictionary;
         private readonly IDbConnection _connection;
         private readonly IDbCommand _command;
+        private readonly bool _disposeConnection;
 
-        public SqlSettingsSource(IDbConnection connection, IDbCommand command)
+        public SqlSettingsSource(IDbConnection connection, IDbCommand command, bool disposeConnection = false)
         {
             _sqlSettingsDictionary = new Dictionary<string, string>();
             _connection = connection;
             _command = command;
+            _disposeConnection = disposeConnection;
         }
 
         /// <summary>
@@ -41,6 +43,11 @@ namespace Fig.SqlSettings
             if (wasClosed)
             {
                 _connection.Close();
+            }
+
+            if (_disposeConnection)
+            {
+                _connection.Dispose();
             }
 
             foreach (var setting in _sqlSettingsDictionary)

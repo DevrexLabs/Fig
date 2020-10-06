@@ -68,30 +68,34 @@ namespace Fig.Test
         [Test]
         public void SettingsBuilderUseSqlOpenConnectionProvidedWithJsonCorrect()
         {
-            var con = GetPrefilledMemoryDatabase();
-            var settings = new SettingsBuilder()
-                .UseAppSettingsJson(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), true)
-                .UseSql(con, "SELECT Key, Value FROM Settings")
-                .Build();
-
-            foreach (var kvp in _defaultSettingValues)
+            using (var con = GetPrefilledMemoryDatabase())
             {
-                Assert.AreEqual(kvp.Value, settings.Get<string>(kvp.Key));
+                var settings = new SettingsBuilder()
+                    .UseAppSettingsJson(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), true)
+                    .UseSql(con, "SELECT Key, Value FROM Settings")
+                    .Build();
+
+                foreach (var kvp in _defaultSettingValues)
+                {
+                    Assert.AreEqual(kvp.Value, settings.Get<string>(kvp.Key));
+                }
             }
         }
 
         [Test]
         public void SettingsBuilderUseSqlOpenConnectionProvidedWithXmlCorrect()
         {
-            var con = GetPrefilledMemoryDatabase();
-            var settings = new SettingsBuilder()
-                .UseAppSettingsXml()
-                .UseSql(con, "SELECT Key, Value FROM Settings")
-                .Build();
-
-            foreach (var kvp in _defaultSettingValues)
+            using (var con = GetPrefilledMemoryDatabase())
             {
-                Assert.AreEqual(kvp.Value, settings.Get<string>(kvp.Key));
+                var settings = new SettingsBuilder()
+                    .UseAppSettingsXml()
+                    .UseSql(con, "SELECT Key, Value FROM Settings")
+                    .Build();
+
+                foreach (var kvp in _defaultSettingValues)
+                {
+                    Assert.AreEqual(kvp.Value, settings.Get<string>(kvp.Key));
+                }
             }
         }
 
@@ -100,7 +104,7 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseAppSettingsJson(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), true)
-                .UseSql(new SQLiteConnection(), "SELECT Key, Value FROM Settings", "ConnectionStrings.SQLiteConnection")
+                .UseSql<SQLiteConnection>("SELECT Key, Value FROM Settings", "ConnectionStrings.SQLiteConnection")
                 .Build();
 
             foreach (var kvp in _defaultSettingValues)
