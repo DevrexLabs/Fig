@@ -112,6 +112,7 @@ by subscribing to the `PropertyChanged` event.
 * ini-files
 * environment variables
 * command line / string array
+* Sql database
 * Bring your own by implementing `ISettingsSource`
 
 Sources provide key value pairs `(string,string)`. 
@@ -217,7 +218,6 @@ MYAPP.COLOR
 MYAPP.ENDPOINT
 ```
 
-
 ## Command line
 Fig can take key/value paires passed on the command line. The default prefix is "--fig:" and default separator is "="
 ```c#
@@ -239,6 +239,38 @@ and `settingsBuilder.UseCommandLine(args, prefix: "")` yields:
 ```
 retries
 ``` 
+
+## Sql database
+Version 1.9 introduces SqlSettings. Read keys and values from any sql database
+that has an ADO.NET provider. (implements `IDbConnection`)
+
+First, `Install-Package Fig.SqlSettings`, then use one of the `UseSql` extension method
+overloads to setup a connection to your database. 
+
+```csharp
+  //pass an IDbConnection with a preconfigured connection string
+  IDbConnection connection = new SqlConnection("Data source=.;Integrated Security=true;Database=mydb");
+  var settings = new SettingsBuilder()
+   .UseSql(connection)
+   .Build();
+```
+
+```csharp
+  //pass a type parameter for the `IDbConnection` implementation class
+  //and a connection string key to pick up from AppSettingsXml / AppSettingsJson
+  var settings = new SettingsBuilder()
+   .UseAppSettingsJson("appsettings.json")
+   .UseSql<SqlConnection>("ConnectionStrings.SQLiteConnection")
+   .Build();
+```
+The SQL query used is `SELECT key, value FROM FigSettings`. You can pass your own query:
+
+```
+  var settings = new SettingsBuilder()
+   .UseAppSettingsJson("appsettings.json")
+   .UseSql<SqlConnection>("ConnectionStrings.SQLiteConnection", "SELECT a,b FROM MySettings")
+   .Build();
+```
 
 # Combining sources
 Use the `SettingsBuilder` to add sources in order of precedence. 
@@ -277,7 +309,7 @@ You can also qualify an  entire section of an ini or json file:
      "Network:PROD" : {
       "ip" : "10.0.0.1",
 	   "port" : 3001
-     }
+     },
 
      "Network:TEST" : {
       "ip" : "127.0.0.1",

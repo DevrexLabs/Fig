@@ -11,8 +11,6 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
         <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
-        <Copyright>Robert Friberg et al</Copyright>
-        <PackageReleaseNotes>Updated nugets, dump config as string</PackageReleaseNotes>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
@@ -20,6 +18,7 @@
       <ProjectReference Include="..\Fig.AppSettingsJson\Fig.AppSettingsJson.csproj" />
       <ProjectReference Include="..\Fig.AppSettingsXml\Fig.AppSettingsXml.csproj" />
       <ProjectReference Include="..\Fig.Core\Fig.Core.csproj" />
+      <ProjectReference Include="..\Fig.SqlSettings\Fig.SqlSettings.csproj" />
     </ItemGroup>
 
 </Project>

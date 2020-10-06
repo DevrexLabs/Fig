@@ -1,15 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Venomaus</Authors>
+    <Title>Fig.SqlSettings</Title>
     <Description>Fig support for sql providers</Description>
     <Copyright>Venomaus</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
-    <PackageReleaseNotes>Implementation of SqlProvider support for Fig</PackageReleaseNotes>
+    <PackageVersion>1.2.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
