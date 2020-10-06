@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Venomaus</Authors>
+    <Description>Fig support for sql providers</Description>
+    <Copyright>Venomaus</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/devrexlabs/fig</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
+    <PackageReleaseNotes>Implementation of SqlProvider support for Fig</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
