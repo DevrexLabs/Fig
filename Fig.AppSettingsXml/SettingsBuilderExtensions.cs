@@ -1,4 +1,4 @@
-    namespace Fig.AppSettingsXml
+namespace Fig.AppSettingsXml
 {
     public static class SettingsBuilderExtensions
     {
