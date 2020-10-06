@@ -14,14 +14,14 @@ namespace Fig.SqlSettings
         /// <param name="connectionStringKey"></param>
         /// <returns></returns>
         public static SettingsBuilder UseSql(this SettingsBuilder settingsBuilder, IDbConnection dbConnection, 
-            string query = null, string connectionStringKey = null, bool disposeConnection = true)
+            string connectionStringKey = null, string query = null, bool disposeConnection = true)
         {
             if (connectionStringKey != null)
             {
                 var settings = settingsBuilder.Build();
                 var connectionString = settings.Get(connectionStringKey);
                 dbConnection.ConnectionString = connectionString ?? 
-                    throw new Exception($"ConnectionString with key '{connectionString}' was not found in the settings.");
+                    throw new Exception($"ConnectionString with key '{connectionStringKey}' was not found in the settings.");
             }
 
             IDbCommand dbCommand = dbConnection.CreateCommand();
@@ -40,9 +40,9 @@ namespace Fig.SqlSettings
         /// <param name="connectionStringKey"></param>
         /// <returns></returns>
         public static SettingsBuilder UseSql<T>(this SettingsBuilder settingsBuilder,
-            string query = null, string connectionStringKey = null) where T : IDbConnection, new()
+            string connectionStringKey, string query = null) where T : IDbConnection, new()
         {
-            return settingsBuilder.UseSql(Activator.CreateInstance<T>(), query, connectionStringKey, true);
+            return settingsBuilder.UseSql(new T(), connectionStringKey, query, true);
         }
     }
 }

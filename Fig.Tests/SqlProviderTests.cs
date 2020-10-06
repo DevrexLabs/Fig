@@ -72,7 +72,7 @@ namespace Fig.Test
             {
                 var settings = new SettingsBuilder()
                     .UseAppSettingsJson(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), true)
-                    .UseSql(con, "SELECT Key, Value FROM Settings")
+                    .UseSql(con, query: "SELECT Key, Value FROM Settings")
                     .Build();
 
                 foreach (var kvp in _defaultSettingValues)
@@ -89,7 +89,7 @@ namespace Fig.Test
             {
                 var settings = new SettingsBuilder()
                     .UseAppSettingsXml()
-                    .UseSql(con, "SELECT Key, Value FROM Settings")
+                    .UseSql(con, query: "SELECT Key, Value FROM Settings")
                     .Build();
 
                 foreach (var kvp in _defaultSettingValues)
@@ -104,7 +104,7 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseAppSettingsJson(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"), true)
-                .UseSql<SQLiteConnection>("SELECT Key, Value FROM Settings", "ConnectionStrings.SQLiteConnection")
+                .UseSql<SQLiteConnection>("ConnectionStrings.SQLiteConnection", "SELECT Key, Value FROM Settings")
                 .Build();
 
             foreach (var kvp in _defaultSettingValues)
