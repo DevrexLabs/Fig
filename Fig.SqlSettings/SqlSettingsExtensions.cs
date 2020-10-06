@@ -14,7 +14,7 @@ namespace Fig.SqlSettings
         /// <param name="connectionStringKey"></param>
         /// <returns></returns>
         public static SettingsBuilder UseSql(this SettingsBuilder settingsBuilder, IDbConnection dbConnection, 
-            string query = null, string connectionStringKey = null)
+            string query = null, string connectionStringKey = null, bool disposeConnection = true)
         {
             if (connectionStringKey != null)
             {
@@ -26,8 +26,23 @@ namespace Fig.SqlSettings
 
             IDbCommand dbCommand = dbConnection.CreateCommand();
             dbCommand.CommandText = query ?? "SELECT key,value FROM FigSettings";
-            var settingsDictionary = new SqlSettingsSource(dbConnection, dbCommand).ToSettingsDictionary();           
+            var settingsDictionary = new SqlSettingsSource(dbConnection, dbCommand, disposeConnection).ToSettingsDictionary();           
             return settingsBuilder.UseSettingsDictionary(settingsDictionary);
+        }
+
+        /// <summary>
+        /// Provides a way to retrieve settings through an sql connection.
+        /// The dbConnection is disposed automatically.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="settingsBuilder"></param>
+        /// <param name="query"></param>
+        /// <param name="connectionStringKey"></param>
+        /// <returns></returns>
+        public static SettingsBuilder UseSql<T>(this SettingsBuilder settingsBuilder,
+    string query = null, string connectionStringKey = null) where T : IDbConnection, new()
+        {
+            return settingsBuilder.UseSql(Activator.CreateInstance<T>(), query, connectionStringKey, true);
         }
     }
 }
