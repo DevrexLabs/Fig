@@ -40,7 +40,7 @@ namespace Fig.SqlSettings
         /// <param name="connectionStringKey"></param>
         /// <returns></returns>
         public static SettingsBuilder UseSql<T>(this SettingsBuilder settingsBuilder,
-    string query = null, string connectionStringKey = null) where T : IDbConnection, new()
+            string query = null, string connectionStringKey = null) where T : IDbConnection, new()
         {
             return settingsBuilder.UseSql(Activator.CreateInstance<T>(), query, connectionStringKey, true);
         }
