@@ -47,4 +47,29 @@ namespace Fig.Test
             });
         }
     }
+
+    public class BindingPathTests
+    {
+        [Test]
+        public void BindingPathIsRespected()
+        {
+            var expected = "expected";
+
+            var typedSettings = new SettingsBuilder()
+                .UseSettingsDictionary(new SettingsDictionary()
+                {
+                    ["MyBindingPath.Property"] = expected
+                }).Build<TypeWithExplicitBindingPath>();
+            
+            Assert.AreEqual(expected, typedSettings.MyProperty);
+
+        }
+
+        private class TypeWithExplicitBindingPath : Settings
+        {
+            public TypeWithExplicitBindingPath() : base("MyBindingPath") { }
+
+            public string MyProperty { get; set; }
+        }
+    }
 }

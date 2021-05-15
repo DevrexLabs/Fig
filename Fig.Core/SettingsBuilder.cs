@@ -26,7 +26,7 @@ namespace Fig
             var result = Activator.CreateInstance<T>();
             result.SettingsDictionary = _compositeDictionary;
             result.Environment = _environment;
-            result.SetBindingPath(prefix);
+            if (prefix != null) result.SetBindingPath(prefix);
             result.PreLoad();
             return result;
         }
