@@ -61,23 +61,25 @@ namespace Fig.Test
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
-                .Build<AppSettings>(prefix: "");
+                .Build();
 
+            var appSettings = settings.Bind<AppSettings>(path: "");
+
+            //todo: assert bound object
             var servers = settings.Get<string[]>("Servers");
             Assert.AreEqual(2, servers.Length);
-            Assert.AreEqual(new string[] { "10.0.0.1", "10.0.0.2" }, servers);
+            Assert.AreEqual(new[] { "10.0.0.1", "10.0.0.2" }, servers);
 
-            var serversCommaSeperated = settings.Get<string>("Servers");
-            Assert.AreEqual("10.0.0.1,10.0.0.2", serversCommaSeperated);
+            var serversCommaSeparated = settings.Get<string>("Servers");
+            Assert.AreEqual("10.0.0.1,10.0.0.2", serversCommaSeparated);
         }
 
-        class AppSettings : Settings
+        class AppSettings
         {
-            public AppSettings()
-                : base(bindingPath: "")
-            { }
-
-            public string[] Servers => Get<string[]>();
+            public string[] Servers
+            {
+                get;
+            }
         }
     }
 }

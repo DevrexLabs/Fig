@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Fig.AppSettingsXml;
 using NUnit.Framework;
@@ -10,14 +8,13 @@ namespace Fig.Test
 {
     public class Tests
     {
-        private ExampleSettings _settings;
+        private Settings _settings;
+        private MySettings _mySettings;
         private SettingsDictionary _settingsDictionary;
 
         [SetUp]
         public void Setup()
         {
-            _settings = new ExampleSettings();
-
             //Normally the builder does all this stuff
             //but we want to have a direct reference to the dictionary
             _settingsDictionary = new SettingsDictionary()
@@ -42,57 +39,22 @@ namespace Fig.Test
                 ["ExampleSettings.MyTimeSpan:FAIL"] = "not a timespan"
             };
 
-            _settings.SettingsDictionary = new CompositeSettingsDictionary();
-            _settings.SettingsDictionary.Add(_settingsDictionary);
-
-            _settings.PreLoad();
-        }
-
-        [Test]
-        public void PropertyChangedFiresWhenPropertyChanges()
-        {
-            string propertyChangedName = null;
-
-            //Arrange
-            _settings.PropertyChanged += (s, ea) => propertyChangedName = ea.PropertyName;
-
-            //Act
-            _settings.MyIntProperty = 500;
-
-            //Assert
-            Assert.NotNull(propertyChangedName, "The event was not received");
-            Assert.AreEqual(nameof(_settings.MyIntProperty), propertyChangedName);
+            var dictionary = new CompositeSettingsDictionary();
+            dictionary.Add(_settingsDictionary);
+            _settings = new Settings(dictionary);
+            _mySettings = _settings.Bind<MySettings>(path: "");
         }
 
         [Test]
         public void CanReadDefault()
         {
-            Assert.AreEqual(1234, _settings.HasDefault);
+            Assert.AreEqual(1234, _mySettings.IntWithDefault);
         }
-
-        [Test]
-        public void CanUpdateRuntimeValue()
-        {
-            _settings.MyIntProperty = 100;
-            Assert.AreEqual(100, _settings.MyIntProperty);
-        }
-
-        [Test]
-        public void MissingPropertyWithoutDefaultFailsValidation()
-        {
-            var builder = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary);
-
-            Assert.Throws<ConfigurationException>(() =>
-            {
-                builder.Build<UnresolvedPropertySettings>();
-            });
-        }
-
+        
         [Test]
         public void BuilderBonanza()
         {
-            var settings = new SettingsBuilder()
+            new SettingsBuilder()
                 .UseCommandLine(new[] { "--fig:MySettings.DefaultBeverage=coffee" })
                 .UseEnvironmentVariables(prefix: "FIG_")
                 .BasePath(Directory.GetCurrentDirectory())
@@ -107,11 +69,7 @@ namespace Fig.Test
         [Test]
         public void BindingPath()
         {
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix: "");
-
-            Assert.AreEqual(TimeSpan.FromMinutes(42), settings.MyTimeSpan);
+            Assert.AreEqual(TimeSpan.FromMinutes(42), _mySettings.MyTimeSpan);
         }
 
         [Test]
@@ -124,10 +82,10 @@ namespace Fig.Test
             //No Configuration, should return unqualified setting
             Assert.AreEqual("Key", settings.Get<string>("Key"));
 
-            settings.SetEnvironment("prod");
+            settings.SetProfile("prod");
             Assert.AreEqual("PROD", settings.Get<string>("Key"));
 
-            settings.SetEnvironment("test");
+            settings.SetProfile("test");
             Assert.AreEqual("TEST", settings.Get<string>("Key"));
         }
 
@@ -146,89 +104,22 @@ namespace Fig.Test
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(dictionary)
                 .SetEnvironment("${ENV}")
-                .Build<ExampleSettings>();
+                .Build();
+            
+            var mySettings = settings.Bind<ExampleSettings>(requireAll: false);
 
-            Assert.AreEqual(TimeSpan.FromMinutes(15), settings.MyTimeSpan);
-            Assert.AreEqual("staging", settings.Environment);
-        }
-
-        [Test]
-        public void EnvironmentSwitchRollsback()
-        {
-            int propertiesChanged = 0;
-            _settings.PropertyChanged += (sender, args) => propertiesChanged++;
-
-            Assert.Throws<ConfigurationException>(
-                () => _settings.SetEnvironment("fail")
-            );
-
-            //Nothing should have changed
-            Assert.AreEqual("", _settings.Environment);
-            Assert.AreEqual(0, propertiesChanged);
-        }
-
-        [Test]
-        public void EnvironmentChangeFiresPropertyChangeEvents()
-        {
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix: "");
-
-            //Set up callback to record all property change notifications
-            var propertyChangeNotifications = new List<string>();
-            settings.PropertyChanged += (sender, args) => propertyChangeNotifications.Add(args.PropertyName);
-
-            //Initial value with no Environment set
-            Assert.AreEqual("Key", settings.Key);
-
-            //switching environment changes a
-            settings.SetEnvironment("prod");
-            Assert.AreEqual("PROD", settings.Key);
-            Assert.AreEqual("Key", propertyChangeNotifications.Single());
-
-            //changing env but no properties will change
-            settings.SetEnvironment("prod2");
-            Assert.AreEqual("PROD", settings.Key);
-            //no changes so we shouldn't have received additional events
-            Assert.AreEqual("Key", propertyChangeNotifications.Single());
-        }
-
-        [Test]
-        public void CanRetrieveIPAddressFromSettings()
-        {
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix: "");
-
-            Assert.AreEqual(IPAddress.Parse("127.0.0.1"), settings.ServerIp);
-        }
-
-        [Test]
-        public void CanRetrieveIPEndPointFromSettings()
-        {
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary)
-                .Build<MySettings>(prefix: "");
-
-            Assert.AreEqual(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80), settings.ServerEndPoint);
+            Assert.AreEqual(TimeSpan.FromMinutes(15), mySettings.MyTimeSpan);
+            Assert.AreEqual("staging", settings.Profile);
         }
     }
 
-    class UnresolvedPropertySettings : Settings
+    class MySettings
     {
-        public int Foo => Get<int>();
-    }
+        public int IntWithDefault => 1234;
+        public TimeSpan MyTimeSpan { get; set; } = TimeSpan.FromMinutes(2);
+        public IPAddress ServerIp { get; set; }
+        public IPEndPoint ServerEndPoint { get; set; }
 
-    class MySettings : Settings
-    {
-        public MySettings()
-            : base(bindingPath: "")
-        { }
-
-        public TimeSpan MyTimeSpan => Get<TimeSpan>();
-        public IPAddress ServerIp => Get<IPAddress>();
-        public IPEndPoint ServerEndPoint => Get<IPEndPoint>();
-
-        public string Key => Get<string>();
+        public string Key { get; }
     }
 }

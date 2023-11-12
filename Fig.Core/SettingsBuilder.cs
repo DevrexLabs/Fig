@@ -18,17 +18,7 @@ namespace Fig
 
         public Settings Build()
         {
-            return new Settings(_compositeDictionary) { Environment = _environment };
-        }
-
-        public T Build<T>(string prefix = null) where T : Settings, new()
-        {
-            var result = Activator.CreateInstance<T>();
-            result.SettingsDictionary = _compositeDictionary;
-            result.Environment = _environment;
-            if (prefix != null) result.SetBindingPath(prefix);
-            result.PreLoad();
-            return result;
+            return new Settings(_compositeDictionary) { Profile = _environment };
         }
 
         /// <summary>
@@ -51,7 +41,6 @@ namespace Fig
         /// <remarks>The path separator (default is _) will be translated to a dot</remarks>
         /// </summary>
         /// <param name="prefix">For example FIG_, default is no prefix. </param>
-        /// <param name="separator">Default is _</param>
         /// <param name="dropPrefix">When true, the prefix will not be included in the key</param>
         /// <returns></returns>
         public SettingsBuilder UseEnvironmentVariables(string prefix = "", bool dropPrefix = true)

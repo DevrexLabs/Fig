@@ -47,13 +47,13 @@ namespace Fig
 
             if (targetType == typeof(IPEndPoint))
             {
-                convertedValue = ConvertIPEndPoint(value);
+                convertedValue = ConvertIpEndPoint(value);
                 return true;
             }
 
             if (targetType == typeof(IPAddress))
             {
-                convertedValue = ConvertIPAddress(value);
+                convertedValue = ConvertIpAddress(value);
                 return true;
             }
             return false;
@@ -118,7 +118,7 @@ namespace Fig
         /// </summary>
         /// <param name="ipAddress"></param>
         /// <returns></returns>
-        private static IPAddress ConvertIPAddress(string ipAddress)
+        private static IPAddress ConvertIpAddress(string ipAddress)
         {
             IPAddress ip;
             if (!IPAddress.TryParse(ipAddress, out ip))
@@ -133,7 +133,7 @@ namespace Fig
         /// </summary>
         /// <param name="endPoint"></param>
         /// <returns></returns>
-        private static IPEndPoint ConvertIPEndPoint(string endPoint)
+        private static IPEndPoint ConvertIpEndPoint(string endPoint)
         {
             string[] ep = endPoint.Split(':');
             if (ep.Length < 2) throw new FormatException("Invalid endpoint format");
@@ -152,8 +152,8 @@ namespace Fig
                     throw new FormatException("Invalid ip-adress");
                 }
             }
-            int port;
-            if (!int.TryParse(ep[ep.Length - 1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out port))
+
+            if (!int.TryParse(ep[ep.Length - 1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out var port))
             {
                 throw new FormatException("Invalid port");
             }

@@ -20,34 +20,15 @@ namespace Fig.Test
         [Test]
         public void CanBindToPocoWithEmptyPrefix()
         {
-            var poco = _builder.Build().Bind<MyPoco>(prefix: "");
+            var poco = _builder.Build().Bind<MyPoco>(path: "");
             Assert.AreEqual(true, poco.SipEnabled);
-        }
-
-        [Test]
-        public void CanBindToSettingsSubTypeWithEmptyPrefix()
-        {
-            var settings = _builder.Build<MySettings>(prefix: "");
-            Assert.AreEqual(true, settings.SipEnabled);
         }
 
         [Test]
         public void CanBindToPocoWithAlternatePrefix()
         {
-            var poco = _builder.Build().Bind<MyPoco>(prefix: "MyPrefix");
+            var poco = _builder.Build().Bind<MyPoco>(path: "MyPrefix");
             Assert.AreEqual(false, poco.SipEnabled);
-        }
-
-        [Test]
-        public void CanBindToSettingsSubTypeWithAlternatePrefix()
-        {
-            var settings = _builder.Build<MySettings>(prefix: "MyPrefix");
-            Assert.AreEqual(false, settings.SipEnabled);
-        }
-
-        private class MySettings : Settings
-        {
-            public bool SipEnabled => Get<bool>();
         }
 
         private class MyPoco

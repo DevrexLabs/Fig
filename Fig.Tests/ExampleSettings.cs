@@ -2,16 +2,19 @@
 
 namespace Fig.Test
 {
-    public class ExampleSettings : Settings
+    public class ExampleSettings
     {
         public int MyIntProperty
         {
-            get => Get(() => 42);
-            set => Set(value);
-        }
+            get;
+            set;
+        } = 42;
 
         public int MyReadonlyIntProperty
-            => Get<int>();
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// No default, thus required
@@ -19,14 +22,16 @@ namespace Fig.Test
         /// </summary>
         public int RequiredInt
         {
-            get => Get<int>();
-            set => Set<int>(value);
+            get;
+            set;
         }
 
         public TimeSpan MyTimeSpan
-            => Get<TimeSpan>();
+        {
+            get;
+            set;
+        }
 
-        public int HasDefault
-            => Get(() => 1234);
+        public int HasDefault => 42;
     }
 }

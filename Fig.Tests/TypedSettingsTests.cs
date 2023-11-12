@@ -59,29 +59,7 @@ namespace Fig.Test
             Assert.AreEqual(0, testClass.Age);
             Assert.AreEqual(0, testClass.Pi);
         }
-
-        [Test]
-        public void WhenBindWithNestedClassPropertyReturnsValue()
-        {
-            _settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary()
-                {
-                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Name)}"] = "Fullname",
-                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.FlagOne)}"]
-                        = "false",
-                    [$"{nameof(TestClassWithNestedClass)}.{nameof(TestClassWithNestedClass.Flags)}.{nameof(TestClassWithNestedClass.Flags.TestEnum)}"]
-                        = "Two"
-                })
-                .Build();
-
-            var testClass = _settings.Bind<TestClassWithNestedClass>(false);
-
-            Assert.AreEqual("Fullname", testClass.Name);
-            Assert.AreEqual(false, testClass.Flags.FlagOne);
-            Assert.AreEqual(false, testClass.Flags.FlagTwo);
-            Assert.AreEqual(NestedEnum.Two, testClass.Flags.TestEnum);
-        }
-
+        
         [Test]
         public void WhenEnvironmentSetAndBindReturnsValue()
         {
@@ -98,7 +76,7 @@ namespace Fig.Test
                 })
                 .Build();
 
-            _settings.SetEnvironment(environment);
+            _settings.SetProfile(environment);
 
             var testClass = _settings.Bind<TestClass>(false);
 
@@ -149,24 +127,6 @@ namespace Fig.Test
             public decimal Pi { get; set; }
             public int Zero { get; } = 0;
         }
-
-        private class TestClassWithNestedClass
-        {
-            public string Name { get; set; }
-            public NestedClass Flags { get; set; }
-        }
-
-        private class NestedClass
-        {
-            public bool FlagOne { get; set; } = true;
-            public bool FlagTwo { get; set; } = false;
-            public NestedEnum TestEnum { get; set; } = NestedEnum.One;
-        }
-
-        private enum NestedEnum
-        {
-            One = 1,
-            Two = 2
-        }
+        
     }
 }

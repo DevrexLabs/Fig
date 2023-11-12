@@ -55,21 +55,21 @@ namespace Fig.Test
         {
             var expected = "expected";
 
-            var typedSettings = new SettingsBuilder()
+            var settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     ["MyBindingPath.Property"] = expected
-                }).Build<TypeWithExplicitBindingPath>();
+                }).Build();
             
-            Assert.AreEqual(expected, typedSettings.MyProperty);
+            var typedSettings = settings.Bind<TypeWithExplicitBindingPath>(path: "MyBindingPath");
+            
+            Assert.AreEqual(expected, typedSettings.Property);
 
         }
 
-        private class TypeWithExplicitBindingPath : Settings
+        private class TypeWithExplicitBindingPath
         {
-            public TypeWithExplicitBindingPath() : base("MyBindingPath") { }
-
-            public string MyProperty { get; set; }
+            public string Property { get; set; }
         }
     }
 }

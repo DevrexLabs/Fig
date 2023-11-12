@@ -41,7 +41,7 @@ namespace Fig.Test
         public void KeyWithExplicitConfigurationTakesPrecedenceOverCurrentConfiguration()
         {
             //set current configuration to "fish"
-            _settings.SetEnvironment("fish");
+            _settings.SetProfile("fish");
 
             //but explicitly ask for "test"
             Assert.AreEqual("a.b:test", _settings.ExpandVariables("${a.b:test}"), "_settings.ExpandVariables(key)");

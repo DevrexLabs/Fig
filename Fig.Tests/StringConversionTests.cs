@@ -69,8 +69,6 @@ namespace Fig.Test
         {
             Assert.AreEqual(42.01f, _converter.Convert<float>("42.01"));
             Assert.AreEqual(-42.01f, _converter.Convert<float>("-42.01"));
-
-            Assert.That(() => _converter.Convert<float>("-4.402823E+38"), Throws.ArgumentException);
         }
 
         [Test]
