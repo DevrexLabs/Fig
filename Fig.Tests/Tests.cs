@@ -39,7 +39,7 @@ namespace Fig.Test
                 ["ExampleSettings.MyTimeSpan:FAIL"] = "not a timespan"
             };
 
-            var dictionary = new CompositeSettingsDictionary();
+            var dictionary = new LayeredSettingsDictionary();
             dictionary.Add(_settingsDictionary);
             _settings = new Settings(dictionary);
             _mySettings = _settings.Bind<MySettings>(path: "");

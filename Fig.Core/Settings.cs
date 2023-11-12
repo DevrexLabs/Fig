@@ -5,16 +5,13 @@ using System.Reflection;
 // ReSharper disable once CheckNamespace
 namespace Fig
 {
-    /// <summary>
-    /// Base class for your typed settings classes or use as is to read settings using string keys
-    /// </summary>
     public sealed class Settings
     {
 
         /// <summary>
         /// The actual data as multiple layers of key value pairs
         /// </summary>
-        internal readonly CompositeSettingsDictionary SettingsDictionary;
+        internal readonly LayeredSettingsDictionary SettingsDictionary;
 
         /// <summary>
         /// Component that can convert strings to various types, pluggable
@@ -27,13 +24,6 @@ namespace Fig
         /// will bind the values of A.B.C and A.B.D to properties C and D of this type
         /// </summary>
         private readonly string _bindingPath;
-
-        private readonly HashSet<Type> _nonNestedPropertyTypes = new HashSet<Type> {
-            typeof(string),
-            typeof(decimal),
-            typeof(DateTime),
-            typeof(TimeSpan)
-        };
 
         public override String ToString()
         {
@@ -49,7 +39,7 @@ namespace Fig
         }
         
 
-        internal Settings(CompositeSettingsDictionary settingsDictionary,
+        internal Settings(LayeredSettingsDictionary settingsDictionary,
             string bindingPath = null, IStringConverter converter = null)
             : this(bindingPath, converter)
         {

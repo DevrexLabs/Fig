@@ -14,6 +14,7 @@
     <RepositoryUrl>https://github.com/devrexlabs/fig</RepositoryUrl>
     <Copyright>Robert Friberg et al</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RootNamespace>Fig</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />

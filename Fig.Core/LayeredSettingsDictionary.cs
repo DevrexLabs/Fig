@@ -10,17 +10,13 @@ namespace Fig
     /// A sequence of dictionaries where keys from layers with lower index
     /// hide keys in the layers with higher indexes.
     /// </summary>
-    internal class CompositeSettingsDictionary
+    internal class LayeredSettingsDictionary
     {
-        private readonly List<SettingsDictionary> _dictionaries;
-
-        public CompositeSettingsDictionary()
-        {
-            _dictionaries = new List<SettingsDictionary>();
-        }
+        private readonly List<SettingsDictionary> _dictionaries 
+            = new List<SettingsDictionary>();
 
         public void Add(SettingsDictionary settingsDictionary) 
-            => _dictionaries.Add(settingsDictionary);
+            => _dictionaries.Insert(0, settingsDictionary);
 
         public bool TryGetValue(string key, string env, out string value)
         {
@@ -57,7 +53,7 @@ namespace Fig
             maxWidths[0] = _dictionaries.SelectMany(d => d.Keys).MaxOrDefault(k => k.Length) + 1;
             maxWidths[1] = _dictionaries.SelectMany(d => d.Values).MaxOrDefault(k => k.Length);
             var minWidth = 22;
-            var colWidths = new int[2]
+            var colWidths = new []
             {
                 Math.Max(minWidth, maxWidths[0]),
                 Math.Max(minWidth, maxWidths[1])

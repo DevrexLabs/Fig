@@ -6,8 +6,8 @@ namespace Fig
 {
     public class SettingsBuilder
     {
-        private readonly CompositeSettingsDictionary _compositeDictionary
-            = new CompositeSettingsDictionary();
+        private readonly LayeredSettingsDictionary _layeredDictionary
+            = new LayeredSettingsDictionary();
 
         private string _environment = "";
 
@@ -18,7 +18,7 @@ namespace Fig
 
         public Settings Build()
         {
-            return new Settings(_compositeDictionary) { Profile = _environment };
+            return new Settings(_layeredDictionary) { Profile = _environment };
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Fig
         /// </summary>
         public SettingsBuilder SetEnvironment(string environmentTemplate)
         {
-            _environment = _compositeDictionary.ExpandVariables(environmentTemplate);
+            _environment = _layeredDictionary.ExpandVariables(environmentTemplate);
             return this;
         }
 
@@ -51,12 +51,12 @@ namespace Fig
 
         private void Add(SettingsDictionary settingsDictionary)
         {
-            _compositeDictionary.Add(settingsDictionary.WithNormalizedEnvironmentQualifiers());
+            _layeredDictionary.Add(settingsDictionary.WithNormalizedEnvironmentQualifiers());
         }
 
         protected internal void AddFileBasedSource(Func<string, SettingsSource> sourceFactory, string fileNameTemplate, bool required)
         {
-            var fileName = _compositeDictionary.ExpandVariables(fileNameTemplate);
+            var fileName = _layeredDictionary.ExpandVariables(fileNameTemplate);
             var fullPath = Path.Combine(_basePath, fileName);
             if (File.Exists(fullPath))
             {

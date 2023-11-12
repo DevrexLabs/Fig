@@ -8,7 +8,7 @@ namespace Fig.Test
         [Test]
         public void KeyInLowerLayerHidesOtherKeys()
         {
-            var cd = new CompositeSettingsDictionary();
+            var cd = new LayeredSettingsDictionary();
             var first = new SettingsDictionary()
             {
                 ["a"] = "a"
@@ -22,13 +22,13 @@ namespace Fig.Test
 
             bool found = cd.TryGetValue("a", null, out var result);
             Assert.IsTrue(found);
-            Assert.AreEqual("a", result);
+            Assert.AreEqual("b", result);
         }
         
         [Test]
         public void UnqualifiedKeyInLowerLayerHidesQualifiedKeysInLayersAbove()
         {
-            var cd = new CompositeSettingsDictionary();
+            var cd = new LayeredSettingsDictionary();
             var first = new SettingsDictionary()
             {
                 ["a"] = "a"
@@ -42,13 +42,13 @@ namespace Fig.Test
 
             bool found = cd.TryGetValue("a", "prod", out var result);
             Assert.IsTrue(found);
-            Assert.AreEqual("a", result);
+            Assert.AreEqual("b", result);
         }
 
         [Test]
         public void CanExpandVariables()
         {
-            var cd = new CompositeSettingsDictionary();
+            var cd = new LayeredSettingsDictionary();
             var first = new SettingsDictionary()
             {
                 ["a"] = "a",
@@ -65,7 +65,7 @@ namespace Fig.Test
         [Test]
         public void QualifiedKeyInSameLayerHasPrecedence()
         {
-            var cd = new CompositeSettingsDictionary();
+            var cd = new LayeredSettingsDictionary();
             var first = new SettingsDictionary()
             {
                 ["a"] = "a",
@@ -81,7 +81,7 @@ namespace Fig.Test
         [Test]
         public void AsString()
         {
-            var cd = new CompositeSettingsDictionary();
+            var cd = new LayeredSettingsDictionary();
             var first = new SettingsDictionary()
             {
                 ["a"] = "b",
@@ -99,9 +99,9 @@ namespace Fig.Test
             Console.WriteLine(toString);
 
             var expected =   "-------------------- Layer 0 ----------------------" + Environment.NewLine
-                           + "| a                      | b                      |" + Environment.NewLine
-                           + "-------------------- Layer 1 ----------------------" + Environment.NewLine
                            + "| c:prod                 | d                      |" + Environment.NewLine
+                           + "-------------------- Layer 1 ----------------------" + Environment.NewLine
+                           + "| a                      | b                      |" + Environment.NewLine
                            + "---------------------------------------------------" + Environment.NewLine;
 
             Assert.AreEqual(expected, toString);
@@ -110,7 +110,7 @@ namespace Fig.Test
         [Test]
         public void EmptyCompositeDictionaryAsStringReturnsCorrectResult()
         {
-            var settingsString = new CompositeSettingsDictionary()
+            var settingsString = new LayeredSettingsDictionary()
                 .AsString();
             Assert.AreEqual(string.Empty, settingsString);
         }
