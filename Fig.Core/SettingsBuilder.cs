@@ -19,7 +19,7 @@ namespace Fig
         {
             return new Settings(_layeredDictionary) { Profile = _profile };
         }
-
+        
         /// <summary>
         /// Set the profile using variable expansion
         /// </summary>
@@ -35,6 +35,18 @@ namespace Fig
             return this;
         }
 
+        /// <summary>
+        /// Load a .env file into environment variables, call before
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="directory"></param>
+        /// <returns></returns>
+        public SettingsBuilder UseDotEnv(string fileName = ".env", string directory = "../../..")
+        {
+            DotEnv.Load(fileName, directory);
+            return this;
+        }
+        
         /// <summary>
         /// Add all the current environment variables that start with a given prefix
         /// <remarks>The path separator (default is _) will be translated to a dot</remarks>
