@@ -2,25 +2,31 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig) [![Join the chat at https://gitter.im/DevrexLabs/Fig](https://badges.gitter.im/DevrexLabs/Fig.svg)](https://gitter.im/DevrexLabs/Fig?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Fig
 
-A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and access it in a structured, type safe manner. The README is the documentation.
+A .NET Standard 2.0 library to help you load application configuration settings from multiple sources and either re. Fig is similar to the configuration bits introduced with .NET Core but adds some additional behavior yet still has fewer dependencies.
 
-Do you have code like the following sprinkledacross your code base?
+This README is the documentation.
+
+## Documentation
+Do you have code like the following sprinkled across your code base?
 
 ```c#
    var settingString = ConfigurationManager.AppSettings["CoffeeRefillIntervalInMinutes"];
    if (settingString == null) settingString = "20";
-   var coffeeInterval = TimeSpan.FromMinutes(Int32.Parse(setting));
+   var refillInterval = TimeSpan.FromMinutes(Int32.Parse(setting));
 ```
 
-This kind of code has multiple issues:
-* Single source of configuration data, the App- or Web.config file
-* Handling defaults, mandatory or optional settings
-* Handling type conversion and validation
-* Different values for different environments: TEST,DEV,PROD,STAGING etc
+This approach has some potential drawbacks:
+* Single source of configuration data, in this case the App- or Web.config file
+* Code duplication dealing with defaults, mandatory or optional settings, type conversion and validation
+* String literals
+* Dependency on ConfigurationManager throughout the code
+* Violates the single responsibility principle when interspersed with domain logic
 
-Fig can help you adress these issues using a consistent API across .NET Framework and .NET Core.
+Fig can elimate these problems and make your life a little easier. Fig works with
+.NET Framework, .NET Core and higher.
 
 ```c#
+  //use app.config or web.config as single source
   var settings = new SettingsBuilder()
     .UseAppSettingsXml()
     .Build();
@@ -28,82 +34,68 @@ Fig can help you adress these issues using a consistent API across .NET Framewor
   var key = "CoffeeRefillInterval";
   var refillInterval = settings.Get<TimeSpan>(key);
 
-  // provide a default for optional settings
-  var refillInterval = settings.Get(key, () => TimeSpan.FromMinutes(10));
+  // For optional settings, provide a default using either a lambda or a direct value
+  // lambda can be useful to avoid an expensive calculation
+  var refillInterval = settings.Get(key, () => CalculateInterval());
+
+  var pricePerCup = settings.Get("PricePerCup", 24);
+
 ```
 
-## Binding to custom types
-The example above uses a string key "CoffeeRefillIntervall". You might want to define your own custom settings class with strongly typed properties.
+Calling `Get()`` without a default will throw a KeyNotFoundException if the key is missing. Keys are not case sensitive.
 
-If you prefer a typed class there are 2 options:
-* inherit from `Fig.Settings`
-* Bind to a POCO
+## Binding
+The example above uses a string key "CoffeeRefillIntervall". With binding you define custom configuration classes with strongly typed properties. Fig will assign all the properties that have a matching key.
 
-Here is the first approach:
-
-```c#
-   public class CoffeeShopSettings : Settings
-   {
-      //with default
-      public TimeSpan CoffeeRefillInterval => Get(() => TimeSpan.FromMinutes(10));
-
-      //Read and write
-      public bool EspressoMachineIsEnabled
-      {
-         get => Get<bool>();
-         set => Set<bool>(value);
-      }
-   }
-
-   //Use the SettingsBuilder to build an instance
-   var settings = new SettingsBuilder()
-    .UseAppSettingsXml()
-    .Build<CoffeeShopSettings>();
-
-   Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
-```
-
-## Binding to POCOs
-If you prefer POCO setting classes, call `Settings.Bind<T>()` or `Settings.Bind<T>(T poco)`
-
-```c#
+```csharp
    public class CoffeeShopSettings
    {
-      //with default
-      public TimeSpan CoffeeRefillInterval { get; set; } = TimeSpan.FromMinutes(10);
+      public TimeSpan RefillInterval { get; set; }
+         = TimeSpan.FromMinutes(10);
 
-      //Read and write
-      public bool EspressoMachineIsEnabled { get; set; }
+      public bool EnableEspressoMachine { get; set; }
    }
 
    //Use the SettingsBuilder to build an instance
    var settings = new SettingsBuilder()
       .UseAppSettingsXml()
-      .Build()
-      .Bind<CoffeeShopSettings>();
+      .Build();
+   
+   var coffeeShopSettings = settings.Bind<CoffeeShopSettings>();
 
-   Console.WriteLine("Next coffee due in " + settings.CoffeeRefillInterval);
+   //It's also possible to bind to an existing object
+   var shopSettings = new ShopSettings();
+   settings.Bind(shopSettings);
+
+```
+
+By default, the class name will be used as a qualifier before the property name, so the preceding example will bind to
+the following keys:
+```
+  CoffeeShopSettings.RefillInterval
+  CoffeeShopSettings.EnableEspressoMachine
+```
+
+Change this behavior by passing an alternative prefix, not including the ".":
+
+```csharp
+  //CoffeeShop.RefillInterval
+  settings.Bind<CoffeeShopSettings>(prefix: "CoffeeShop");
+  //or just "RefillInterval"
+  settings.Bind<CoffeeShopSettings>(prefix: "")
 ```
 
 ## Binding to multiple objects
-In a larger project you don't want all the settings in the same class.
-In this case save a reference to the `SettingsBuilder` and use it multiple times:
+In a larger project you probably don't want all the settings in the same class.
+One solution is to create separate classes to hold subsets of the configuration data.
 
 ```c#
-var builder = new SettingsBuilder().UseAppSettingsXml();
-var dbSettings = builder.Build<DbSettings>();
-var networkSettings = builder.Build<NetworkSettings>();
-```
+var settings = new SettingsBuilder()
+   .UseAppSettingsXml()
+   .Build();
 
-## Change notifications
-The `Settings` class implements `INotifyPropertyChanged`. React to configuration changes
-by subscribing to the `PropertyChanged` event.
-
-```c#
-   settings.PropertyChanged += (sender,args) 
-        => Console.WriteLine(args.PropertyName + " changed!");
-
-   settings.EspressoMachineIsEnabled = false;
+var dbSettings = settings.Bind<DbSettings>();
+var networkSettings = settings.Bind<NetworkSettings>();
 ```
 
 ## Configuration sources
@@ -219,7 +211,7 @@ MYAPP.ENDPOINT
 ```
 
 ## Command line
-Fig can take key/value paires passed on the command line. The default prefix is "--fig:" and default separator is "="
+Fig can take key/value pairs passed on the command line. The default prefix is "--fig:" and default separator is "="
 ```c#
 //Given
 string[] args = new []{
@@ -299,7 +291,7 @@ A different approach is to qualify keys with an environment name suffix:
    redis.endpoint=localhost:6379
    redis.endpoint:PROD=redis.mydomain.net:6379
    redis.endpoint:STAGING=10.0.0.42:6379
-   ENV=PROD
+   PROFILE=PROD
 ```
 
 You can also qualify an  entire section of an ini or json file:
@@ -329,18 +321,18 @@ ip=127.0.0.1
 port =13001
 ```
 
-set the environment on the builder:
+set the profile on the builder:
 ```c#
    var settings = new SettingsBuilder()
        .UseCommandLine()
        .UseEnvironmentVariables()
-       .SetEnvironment("${ENV}") //must be provided above
+       .SetProfile("${Profile}") //must be provided above
        .UseIniFile("settings.ini")
        .Build();             
 ```
 Or directly on the settings instance:
 ```c#
-   _settings.SetEnvironment("STAGING");
+   _settings.Profile = "STAGING";
    endpoint = _settings.Get("redis.endpoint"); // 10.0.0.42:6379
 ```
 
@@ -383,7 +375,8 @@ with keys and values of each layer:
 public class MySource : SettingsSource
 {
    protected override IEnumerable<(string, string)> GetSettings()
-   
+   {
+      //todo: your code goes here
        yield return ("key", "value");
    }
 }
@@ -392,8 +385,14 @@ public static class MySettingsBuilderExtensions
 {
    public static SettingsBuilder UseMySource(this SettingsBuilder builder)
    {
+      //do what you have to do
       var mySource = new MySource();
+
+      //call the inherited ToSettingsDictionary() method
+      //which in turn iterates over your GetSettings() implementation
       var dictionary = mySource.ToSettingsDictionary();
+
+      // Remember to return the builder to support fluent configuration
       return builder.UseSettingsDictionary(dictionary);
    }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Fig.Core;
 
 namespace Fig
 {
@@ -9,7 +8,7 @@ namespace Fig
         private readonly LayeredSettingsDictionary _layeredDictionary
             = new LayeredSettingsDictionary();
 
-        private string _environment = "";
+        private string _profile = "";
 
         /// <summary>
         /// Where to look for files, default is current working directory
@@ -18,15 +17,15 @@ namespace Fig
 
         public Settings Build()
         {
-            return new Settings(_layeredDictionary) { Profile = _environment };
+            return new Settings(_layeredDictionary) { Profile = _profile };
         }
 
         /// <summary>
-        /// Set the environment using variable expansion
+        /// Set the profile using variable expansion
         /// </summary>
-        public SettingsBuilder SetEnvironment(string environmentTemplate)
+        public SettingsBuilder SetProfile(string profileTemplate)
         {
-            _environment = _layeredDictionary.ExpandVariables(environmentTemplate);
+            _profile = _layeredDictionary.ExpandVariables(profileTemplate);
             return this;
         }
 
@@ -45,13 +44,13 @@ namespace Fig
         /// <returns></returns>
         public SettingsBuilder UseEnvironmentVariables(string prefix = "", bool dropPrefix = true)
         {
-            Add(new EnvironmentVarsSettingsSource(prefix, dropPrefix).ToSettingsDictionary());
+            Add(new EnvironmentVariablesSource(prefix, dropPrefix).ToSettingsDictionary());
             return this;
         }
 
         private void Add(SettingsDictionary settingsDictionary)
         {
-            _layeredDictionary.Add(settingsDictionary.WithNormalizedEnvironmentQualifiers());
+            _layeredDictionary.Add(settingsDictionary.WithNormalizedProfileQualifiers());
         }
 
         protected internal void AddFileBasedSource(Func<string, SettingsSource> sourceFactory, string fileNameTemplate, bool required)

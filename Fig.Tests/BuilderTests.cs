@@ -17,10 +17,10 @@ namespace Fig.Test
         [Test]
         public void CanLoadRequiredFileWithVariableExpansion()
         {
-            Environment.SetEnvironmentVariable("ENV", "TEST");
+            Environment.SetEnvironmentVariable("PROFILE", "TEST");
             var settings = new SettingsBuilder()
                 .UseEnvironmentVariables()
-                .UseAppSettingsJson("appsettings.${ENV}.json", required: true)
+                .UseAppSettingsJson("appSettings.${PROFILE}.json", required: true)
                 .Build();
             Assert.DoesNotThrow(() => settings.Get("AllowedHosts"));
         }

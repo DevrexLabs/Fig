@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-using Fig.Core;
 using NUnit.Framework;
 
 namespace Fig.Test
@@ -16,7 +12,7 @@ namespace Fig.Test
         [SetUp]
         public void Setup()
         {
-            _iniFileSettingsSource = new IniFileSettingsSource(new string[] {
+            _iniFileSettingsSource = new IniFileSettingsSource(new [] {
                 "key1=This is a string with spaces",
                 "[Section.A]",
                 "ScanInterval=00:25:00",
@@ -80,7 +76,7 @@ namespace Fig.Test
         {
             var dict = _iniFileSettingsSource
                 .ToSettingsDictionary()
-                .WithNormalizedEnvironmentQualifiers();
+                .WithNormalizedProfileQualifiers();
             
             Assert.AreEqual("root:PROD", dict["root:PROD"]);
 

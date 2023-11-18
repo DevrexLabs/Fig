@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Fig.Core
+namespace Fig
 {
-    public class EnvironmentVarsSettingsSource : SettingsSource
+    internal class EnvironmentVariablesSource : SettingsSource
     {
         private readonly string _prefix;
 
@@ -15,12 +15,12 @@ namespace Fig.Core
         private readonly IDictionary _vars;
         
         
-        public EnvironmentVarsSettingsSource(string prefix, bool dropPrefix)
+        public EnvironmentVariablesSource(string prefix, bool dropPrefix)
             :this(Environment.GetEnvironmentVariables(), prefix, dropPrefix)
         {
         }
 
-        internal EnvironmentVarsSettingsSource(IDictionary vars, string prefix, bool dropPrefix)
+        internal EnvironmentVariablesSource(IDictionary vars, string prefix, bool dropPrefix)
         {
             _vars = vars;
             _prefix = prefix;

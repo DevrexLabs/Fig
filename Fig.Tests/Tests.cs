@@ -73,28 +73,28 @@ namespace Fig.Test
         }
 
         [Test]
-        public void EnvironmentIsRespected()
+        public void ProfileIsRespected()
         {
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(_settingsDictionary)
                 .Build();
 
-            //No Configuration, should return unqualified setting
+            //No Profile, should return unqualified setting
             Assert.AreEqual("Key", settings.Get<string>("Key"));
 
-            settings.SetProfile("prod");
+            settings.Profile = "prod";
             Assert.AreEqual("PROD", settings.Get<string>("Key"));
 
-            settings.SetProfile("test");
+            settings.Profile = "test";
             Assert.AreEqual("TEST", settings.Get<string>("Key"));
         }
 
         [Test]
-        public void InitialEnvironment()
+        public void InitialProfile()
         {
             var dictionary = new SettingsDictionary()
             {
-                ["env"] = "staging",
+                ["Profile"] = "staging",
                 ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
                 ["ExampleSettings.MyTimeSpan"] = "00:10:00",
                 ["ExampleSettings.RequiredInt"] = "200",
@@ -103,7 +103,7 @@ namespace Fig.Test
 
             var settings = new SettingsBuilder()
                 .UseSettingsDictionary(dictionary)
-                .SetEnvironment("${ENV}")
+                .SetProfile("${Profile}")
                 .Build();
             
             var mySettings = settings.Bind<ExampleSettings>(requireAll: false);

@@ -16,7 +16,7 @@ namespace Fig
         /// Return a new SettingsDictionary with environment qualifiers 
         /// </summary>
         /// <returns></returns>
-        internal SettingsDictionary WithNormalizedEnvironmentQualifiers()
+        internal SettingsDictionary WithNormalizedProfileQualifiers()
         {
             var result = new SettingsDictionary();
             var transformer = new KeyTransformer();

@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Fig.Core
+namespace Fig
 {
     static class RegexExtensions
     {

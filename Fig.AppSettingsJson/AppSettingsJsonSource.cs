@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Json;
 using System.Linq;
@@ -8,13 +7,12 @@ namespace Fig
 {
     public class AppSettingsJsonSource : SettingsSource
     {
-
         /// <summary>
         /// Path separator used in the output
         /// </summary>
-        private string _separator = ".";
+        private readonly string _separator = ".";
 
-        private string _path;
+        private readonly string _path;
 
         private Dictionary<string, string> _data;
 

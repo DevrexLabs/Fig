@@ -7,12 +7,6 @@ namespace Fig
     public abstract class SettingsSource : ISettingsSource
     {
         /// <summary>
-        /// Regular expression to validate keys including path separator and environment selector
-        /// One or more non whitespace characters
-        /// </summary>
-        public const string KeyMatcher = @"[a-z0-9.]+(:[a-z]+)?";
-
-        /// <summary>
         /// Only retrieve settings where the key starts with the prefix. Case-insensitive
         /// </summary>
         public string Prefix { get; set; }

@@ -15,7 +15,7 @@ namespace Fig.Test
             var source = new AppSettingsJsonSource(path);
             _settingsDictionary = source
                 .ToSettingsDictionary()
-                .WithNormalizedEnvironmentQualifiers();
+                .WithNormalizedProfileQualifiers();
         }
 
         [Test]
@@ -48,7 +48,7 @@ namespace Fig.Test
         }
 
         [Test]
-        public void CanResolveEnvironmentQualifiedSection()
+        public void CanResolveProfileQualifiedSection()
         {
             Assert.AreEqual("1", _settingsDictionary["EnvQualified.a:PROD"]);
             Assert.AreEqual("1", _settingsDictionary["EnvQualified.b:PROD"]);
@@ -64,8 +64,8 @@ namespace Fig.Test
                 .Build();
 
             var appSettings = settings.Bind<AppSettings>(path: "");
-
-            //todo: assert bound object
+            Assert.IsTrue(appSettings.Servers is { Length: 2 });
+            
             var servers = settings.Get<string[]>("Servers");
             Assert.AreEqual(2, servers.Length);
             Assert.AreEqual(new[] { "10.0.0.1", "10.0.0.2" }, servers);
@@ -74,11 +74,13 @@ namespace Fig.Test
             Assert.AreEqual("10.0.0.1,10.0.0.2", serversCommaSeparated);
         }
 
-        class AppSettings
+        private class AppSettings
         {
             public string[] Servers
             {
                 get;
+                // ReSharper disable once UnusedAutoPropertyAccessor.Local
+                set;
             }
         }
     }

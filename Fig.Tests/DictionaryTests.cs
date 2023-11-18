@@ -52,12 +52,12 @@ namespace Fig.Test
             var first = new SettingsDictionary()
             {
                 ["a"] = "a",
-                ["env"] = "test",
+                ["profile"] = "test",
                 ["a:prod"] = "b"
             };
             cd.Add(first);
 
-            var actual = cd.ExpandVariables("appSettings.${ENV}.json");
+            var actual = cd.ExpandVariables("appSettings.${Profile}.json");
             Assert.AreEqual("appSettings.test.json", actual);
 
         }
@@ -128,7 +128,7 @@ namespace Fig.Test
                 ["a"] = "a"
             };
 
-            var transformed = dict.WithNormalizedEnvironmentQualifiers();
+            var transformed = dict.WithNormalizedProfileQualifiers();
             foreach (var key in transformed.Keys)
             {
                 Assert.AreEqual(key, transformed[key]);

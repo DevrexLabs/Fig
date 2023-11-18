@@ -61,9 +61,9 @@ namespace Fig.Test
         }
         
         [Test]
-        public void WhenEnvironmentSetAndBindReturnsValue()
+        public void WhenProfileSetAndBindReturnsValue()
         {
-            var environment = "TEST";
+            var profile = "TEST";
             var propertyName = $"{nameof(TestClass)}.{nameof(TestClass.Name)}";
             var expectedValue = "FullnameTest";
 
@@ -72,11 +72,11 @@ namespace Fig.Test
                 .UseSettingsDictionary(new SettingsDictionary()
                 {
                     [$"{propertyName}"] = "Fullname",
-                    [$"{propertyName}:{environment}"] = expectedValue
+                    [$"{propertyName}:{profile}"] = expectedValue
                 })
                 .Build();
 
-            _settings.SetProfile(environment);
+            _settings.Profile = profile;
 
             var testClass = _settings.Bind<TestClass>(false);
 

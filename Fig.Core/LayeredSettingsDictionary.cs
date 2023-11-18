@@ -18,11 +18,11 @@ namespace Fig
         public void Add(SettingsDictionary settingsDictionary) 
             => _dictionaries.Insert(0, settingsDictionary);
 
-        public bool TryGetValue(string key, string env, out string value)
+        public bool TryGetValue(string key, string profile, out string value)
         {
             value = null;
             var suffix = "";
-            if (!String.IsNullOrEmpty(env) && !key.Contains(":")) suffix = ":" + env;
+            if (!String.IsNullOrEmpty(profile) && !key.Contains(":")) suffix = ":" + profile;
 
             foreach (var sd in _dictionaries)
             {
@@ -38,13 +38,13 @@ namespace Fig
         /// Look for ${key} and replace with values from the dictionary 
         /// </summary>
         /// <param name="template">The string to expand</param>
-        /// <param name="configuration">A specific configuration to use if key is unqualified</param>
+        /// <param name="explicitProfile">A specific configuration to use if key is unqualified</param>
         /// <returns>the resulting string or an exception if key is missing</returns>
-        public string ExpandVariables(string template, string configuration = null)
+        internal string ExpandVariables(string template, string explicitProfile = null)
         {
-            var pattern = "\\$\\{\\s*(?<key>[a-z0-9.]+)(:(?<env>[a-z]+))?\\s*\\}";
+            var pattern = "\\$\\{\\s*(?<key>[a-z0-9.]+)(:(?<profile>[a-z]+))?\\s*\\}";
             var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            return regex.Replace(template, m => GetCurrentEnvironment(m, configuration));
+            return regex.Replace(template, m => GetCurrentProfile(m, explicitProfile));
         }
 
         public string AsString()
@@ -88,23 +88,30 @@ namespace Fig
             return sb.ToString();
         }
 
-        private string GetCurrentEnvironment(Match m, string configuration)
+        private string GetCurrentProfile(Match m, string configuration)
         {
             var key = m.Groups["key"]. Value;
-            var env = m.Groups["env"].Success ? m.Groups["env"].Value : configuration;
-            TryGetValue(key, env, out var result);
+            var profile = m.Groups["profile"].Success ? m.Groups["profile"].Value : configuration;
+            TryGetValue(key, profile, out var result);
             return result;
         }
 
         private bool ConcatIndices(SettingsDictionary sd, string key, out string value)
         {
+            value = null;
+
             var indices = new List<string>();
             while (sd.TryGetValue(key + "." + indices.Count, out value))
             {
                 indices.Add(value);
             }
-            value = indices.Count == 0 ? null : string.Join(",", indices);
-            return value != null;
+
+            if (indices.Count > 0)
+            {
+                value = string.Join(",", indices);
+                return true;
+            }
+            return false;
         }
     }
 }

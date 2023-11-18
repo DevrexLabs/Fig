@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-// ReSharper disable once CheckNamespace
 namespace Fig
 {
     public sealed class Settings
@@ -51,20 +50,12 @@ namespace Fig
         /// key with same name without suffix. The suffix does not include the : separator.
         /// </summary>
         public string Profile { get; internal set; }
-
-        /// <summary>
-        /// Change the current environment forcing a reload and possible property change notifications
-        /// </summary>
-        public void SetProfile(string environmentName)
-        {
-            Profile = environmentName ?? throw new ArgumentNullException(nameof(environmentName));
-        }
-
+        
         /// <summary>
         /// Replace all occurrences of the pattern ${key} within the provided template
         /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Environment
         /// </summary>
-        public string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Profile);
+        internal string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Profile);
 
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
@@ -140,6 +131,7 @@ namespace Fig
         public string Get(string key, Func<string> @default = null)
             => Get<string>(key, @default);
 
+
         /// <summary>
         /// Get the string for a given key and convert to the desired type
         /// </summary>
@@ -153,37 +145,34 @@ namespace Fig
             var found = SettingsDictionary
                 .TryGetValue(key, Profile, out var result);
             if (found) return _converter.Convert<T>(result);
-            else if (@default != null) return @default();
-            else throw new KeyNotFoundException();
+            if (@default != null) return @default();
+            throw new KeyNotFoundException();
         }
-        
 
-        private string GetKey(string key, string propertyName)
+        public bool TryGet<T>(string key, out T result)
         {
-            key = key ?? propertyName;
-            if (_bindingPath.Length > 0) key = _bindingPath + "." + key;
-            return key;
+            result = default(T);
+            var found = SettingsDictionary.TryGetValue(key, Profile, out var value);
+            if (found) result = _converter.Convert<T>(value);
+            return found;
         }
+
 
         /// <summary>
-        /// This is where the actual retrieval, conversion and caching happens
+        /// This is where the actual retrieval and type conversion happens
         /// </summary>
-        private object Get(Type propertyType, string propertyName, string key = null, Func<object> @default = null)
+        private object Get(Type propertyType, string propertyName)
         {
-            lock (this)
+            var key = propertyName;
+            if (_bindingPath.Length > 0) key = _bindingPath +  "." + key;
+
+            if (!SettingsDictionary.TryGetValue(key, Profile, out string value))
             {
-                key = GetKey(key, propertyName);
-
-                if (!SettingsDictionary.TryGetValue(key, Profile, out string value))
-                {
-                    if (@default == null) throw new KeyNotFoundException(key);
-                    return @default.Invoke();
-                }
-
-                //TODO: This could throw, deal with it
-                var result = _converter.Convert(value, propertyType);
-                return result;
+                throw new KeyNotFoundException(key);
             }
+
+            var result = _converter.Convert(value, propertyType);
+            return result;
         }
     }
 }
