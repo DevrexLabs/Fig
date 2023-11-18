@@ -18,15 +18,12 @@ namespace Fig
         public void Add(SettingsDictionary settingsDictionary) 
             => _dictionaries.Insert(0, settingsDictionary);
 
-        public bool TryGetValue(string key, string profile, out string value)
+        public bool TryGetValue(string key, out string value)
         {
             value = null;
-            var suffix = "";
-            if (!String.IsNullOrEmpty(profile) && !key.Contains(":")) suffix = ":" + profile;
 
             foreach (var sd in _dictionaries)
             {
-                if (suffix != "" && sd.TryGetValue(key + suffix, out value)) break;
                 if (sd.TryGetValue(key, out value)) break;
                 if (ConcatIndices(sd, key, out value)) break;
             }
@@ -38,13 +35,12 @@ namespace Fig
         /// Look for ${key} and replace with values from the dictionary 
         /// </summary>
         /// <param name="template">The string to expand</param>
-        /// <param name="explicitProfile">A specific configuration to use if key is unqualified</param>
         /// <returns>the resulting string or an exception if key is missing</returns>
-        internal string ExpandVariables(string template, string explicitProfile = null)
+        internal string ExpandVariables(string template)
         {
-            var pattern = "\\$\\{\\s*(?<key>[a-z0-9.]+)(:(?<profile>[a-z]+))?\\s*\\}";
+            var pattern = "\\$\\{\\s*(?<key>[a-z0-9.]+)\\s*\\}";
             var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            return regex.Replace(template, m => GetCurrentProfile(m, explicitProfile));
+            return regex.Replace(template, GetCurrentProfile);
         }
 
         public string AsString()
@@ -88,11 +84,10 @@ namespace Fig
             return sb.ToString();
         }
 
-        private string GetCurrentProfile(Match m, string configuration)
+        private string GetCurrentProfile(Match m)
         {
             var key = m.Groups["key"]. Value;
-            var profile = m.Groups["profile"].Success ? m.Groups["profile"].Value : configuration;
-            TryGetValue(key, profile, out var result);
+            TryGetValue(key, out var result);
             return result;
         }
 

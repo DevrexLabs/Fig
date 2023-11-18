@@ -20,31 +20,11 @@ namespace Fig.Test
             cd.Add(first);
             cd.Add(second);
 
-            bool found = cd.TryGetValue("a", null, out var result);
+            bool found = cd.TryGetValue("a", out var result);
             Assert.IsTrue(found);
             Assert.AreEqual("b", result);
         }
         
-        [Test]
-        public void UnqualifiedKeyInLowerLayerHidesQualifiedKeysInLayersAbove()
-        {
-            var cd = new LayeredSettingsDictionary();
-            var first = new SettingsDictionary()
-            {
-                ["a"] = "a"
-            };
-            var second = new SettingsDictionary()
-            {
-                ["a:prod"] = "b"
-            };
-            cd.Add(first);
-            cd.Add(second);
-
-            bool found = cd.TryGetValue("a", "prod", out var result);
-            Assert.IsTrue(found);
-            Assert.AreEqual("b", result);
-        }
-
         [Test]
         public void CanExpandVariables()
         {
@@ -61,23 +41,7 @@ namespace Fig.Test
             Assert.AreEqual("appSettings.test.json", actual);
 
         }
-
-        [Test]
-        public void QualifiedKeyInSameLayerHasPrecedence()
-        {
-            var cd = new LayeredSettingsDictionary();
-            var first = new SettingsDictionary()
-            {
-                ["a"] = "a",
-                ["a:prod"] = "b"
-            };
-            cd.Add(first);
-
-            bool found = cd.TryGetValue("a", "prod", out var result);
-            Assert.IsTrue(found);
-            Assert.AreEqual("b", result);
-        }
-
+        
         [Test]
         public void AsString()
         {
@@ -88,7 +52,7 @@ namespace Fig.Test
             };
             var second = new SettingsDictionary()
             {
-                ["c:prod"] = "d"
+                ["c"] = "d"
             };
             cd.Add(first);
             cd.Add(second);
@@ -99,7 +63,7 @@ namespace Fig.Test
             Console.WriteLine(toString);
 
             var expected =   "-------------------- Layer 0 ----------------------" + Environment.NewLine
-                           + "| c:prod                 | d                      |" + Environment.NewLine
+                           + "| c                      | d                      |" + Environment.NewLine
                            + "-------------------- Layer 1 ----------------------" + Environment.NewLine
                            + "| a                      | b                      |" + Environment.NewLine
                            + "---------------------------------------------------" + Environment.NewLine;
@@ -113,26 +77,6 @@ namespace Fig.Test
             var settingsString = new LayeredSettingsDictionary()
                 .AsString();
             Assert.AreEqual(string.Empty, settingsString);
-        }
-
-        [Test]
-        public void KeyTransformation()
-        {
-            var dict = new SettingsDictionary()
-            {
-                [":prod.a"] = "a:prod",
-                ["a:prod.b"] = "a.b:prod",
-                ["a.b:prod.c"] = "a.b.c:prod",
-                ["a.b.c:prod"] = "a.b.c:prod",
-                ["a.b"] = "a.b",
-                ["a"] = "a"
-            };
-
-            var transformed = dict.WithNormalizedProfileQualifiers();
-            foreach (var key in transformed.Keys)
-            {
-                Assert.AreEqual(key, transformed[key]);
-            }
         }
     }
 }

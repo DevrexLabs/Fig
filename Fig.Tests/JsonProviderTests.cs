@@ -14,8 +14,7 @@ namespace Fig.Test
             var path = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
             var source = new AppSettingsJsonSource(path);
             _settingsDictionary = source
-                .ToSettingsDictionary()
-                .WithNormalizedProfileQualifiers();
+                .ToSettingsDictionary();
         }
 
         [Test]
@@ -45,15 +44,6 @@ namespace Fig.Test
             Assert.AreEqual("Homer", _settingsDictionary["Simpsons.1.Name"]);
             Assert.AreEqual("12", _settingsDictionary["Simpsons.0.age"]);
             Assert.AreEqual("35", _settingsDictionary["Simpsons.1.age"]);
-        }
-
-        [Test]
-        public void CanResolveProfileQualifiedSection()
-        {
-            Assert.AreEqual("1", _settingsDictionary["EnvQualified.a:PROD"]);
-            Assert.AreEqual("1", _settingsDictionary["EnvQualified.b:PROD"]);
-            Assert.AreEqual("2", _settingsDictionary["EnvQualified.a:TEST"]);
-            Assert.AreEqual("2", _settingsDictionary["EnvQualified.b:TEST"]);
         }
 
         [Test]

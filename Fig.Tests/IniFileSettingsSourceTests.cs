@@ -20,12 +20,6 @@ namespace Fig.Test
                 "[OtherSection]",
                 "key3=300",
                 "", //empty line
-                "[:PROD]",
-                "root=root:PROD",
-                "[SectionWithEnv:PROD]",
-                "a=SectionWithEnv.a:PROD",
-                "b=SectionWithEnv.b:PROD",
-                "c.d=SectionWithEnv.c.d:PROD"
             });
         }
 
@@ -69,29 +63,6 @@ namespace Fig.Test
 
             Assert.IsTrue(getResult);
             Assert.AreEqual(expectedValue, actualValue);
-        }
-        
-        [Test]
-        public void SectionWithEnvironmentQualifier()
-        {
-            var dict = _iniFileSettingsSource
-                .ToSettingsDictionary()
-                .WithNormalizedProfileQualifiers();
-            
-            Assert.AreEqual("root:PROD", dict["root:PROD"]);
-
-            var keys = new[]
-            {
-                "SectionWithEnv.a:PROD",
-                "SectionWithEnv.b:PROD",
-                "SectionWithEnv.c.d:PROD",
-                "root:PROD"
-            };
-
-            foreach (var key in keys)
-            {
-                Assert.AreEqual(key, dict[key]);
-            }
         }
     }
 }

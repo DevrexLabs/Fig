@@ -17,9 +17,7 @@ namespace Fig.Test
                     ["CoffeeRefillInterval"] = "00:05:00",
                     ["A"] = "A",
                     ["B"] = "B",
-                    ["b:prod"] = "b:prod",
                     ["a.b"] = "a.b",
-                    ["a.b:test"] = "a.b:test",
                 })
                 .Build();
         }
@@ -28,27 +26,13 @@ namespace Fig.Test
         [TestCase("${A}${A}", ExpectedResult = "AA", Description = "Duplicate keys")]
         [TestCase("${A}${D}", ExpectedResult = "A", Description = "Mixed present and missing")]
         [TestCase("${A}${B}", ExpectedResult = "AB", Description = "Multiple keys")]
-        [TestCase("${B:prod}", ExpectedResult = "b:prod", Description = "explicit configuration")]
-        [TestCase("bumble ${B:prod}", ExpectedResult = "bumble b:prod", Description = "Mixed content")]
         [TestCase("${a.b}", ExpectedResult = "a.b", Description = "Composite keys")]
-        [TestCase("${a.b:test}", ExpectedResult = "a.b:test", Description = "Composite key with configuration selector")]
+
         public string CanExpandVariables(string template)
         {
             return _settings.ExpandVariables(template);
         }
-
-        [TestCase]
-        public void KeyWithExplicitConfigurationTakesPrecedenceOverCurrentConfiguration()
-        {
-            //set current configuration to "fish"
-            _settings.Profile = "fish";
-
-            //but explicitly ask for "test"
-            Assert.AreEqual("a.b:test", _settings.ExpandVariables("${a.b:test}"), "_settings.ExpandVariables(key)");
-
-            Assert.AreEqual("a.b:test", _settings.Get("a.b:test"), "_settings.Get(key)");
-        }
-
+        
         [Test]
         public void MissingKeyAndNoDefaultThrowsException()
         {

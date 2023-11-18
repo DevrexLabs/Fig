@@ -8,8 +8,6 @@ namespace Fig
         private readonly LayeredSettingsDictionary _layeredDictionary
             = new LayeredSettingsDictionary();
 
-        private string _profile = "";
-
         /// <summary>
         /// Where to look for files, default is current working directory
         /// </summary>
@@ -17,18 +15,10 @@ namespace Fig
 
         public Settings Build()
         {
-            return new Settings(_layeredDictionary) { Profile = _profile };
+            return new Settings(_layeredDictionary);
         }
         
-        /// <summary>
-        /// Set the profile using variable expansion
-        /// </summary>
-        public SettingsBuilder SetProfile(string profileTemplate)
-        {
-            _profile = _layeredDictionary.ExpandVariables(profileTemplate);
-            return this;
-        }
-
+        
         public SettingsBuilder UseCommandLine(string[] args, string prefix = "--fig:", char delimiter = '=')
         {
             Add(new StringArraySource(args, prefix, delimiter).ToSettingsDictionary());
@@ -62,7 +52,7 @@ namespace Fig
 
         private void Add(SettingsDictionary settingsDictionary)
         {
-            _layeredDictionary.Add(settingsDictionary.WithNormalizedProfileQualifiers());
+            _layeredDictionary.Add(settingsDictionary);
         }
 
         protected internal void AddFileBasedSource(Func<string, SettingsSource> sourceFactory, string fileNameTemplate, bool required)

@@ -40,7 +40,7 @@ namespace Fig.Test
                 })
                 .Build();
 
-            Assert.Throws<ConfigurationException>(() => _settings.Bind<TestClass>());
+            Assert.Throws<ConfigurationException>(() => _settings.Bind<TestClass>(requireAll:true));
         }
 
         [Test]
@@ -60,51 +60,7 @@ namespace Fig.Test
             Assert.AreEqual(0, testClass.Pi);
         }
         
-        [Test]
-        public void WhenProfileSetAndBindReturnsValue()
-        {
-            var profile = "TEST";
-            var propertyName = $"{nameof(TestClass)}.{nameof(TestClass.Name)}";
-            var expectedValue = "FullnameTest";
-
-
-            _settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary()
-                {
-                    [$"{propertyName}"] = "Fullname",
-                    [$"{propertyName}:{profile}"] = expectedValue
-                })
-                .Build();
-
-            _settings.Profile = profile;
-
-            var testClass = _settings.Bind<TestClass>(false);
-
-            Assert.AreEqual(expectedValue, testClass.Name);
-        }
-
-        [Test]
-        public void WhenEnvironmentNotSetAndBindReturnsValue()
-        {
-            var environment = "TEST";
-            var propertyName = $"{nameof(TestClass)}.{nameof(TestClass.Name)}";
-            var expectedValue = "Fullname";
-
-
-            _settings = new SettingsBuilder()
-                .UseSettingsDictionary(new SettingsDictionary()
-                {
-                    [$"{propertyName}"] = expectedValue,
-                    [$"{propertyName}:{environment}"] = "FullnameTest"
-                })
-                .Build();
-
-            var testClass = _settings.Bind<TestClass>(false);
-
-            Assert.AreEqual(expectedValue, testClass.Name);
-        }
-
-
+        
         [Test]
         public void WhenBindAbstractPropertyTypeAreIgnored()
         {

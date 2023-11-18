@@ -34,7 +34,6 @@ namespace Fig
         {
             _converter = converter ?? new InvariantStringConverter();
             _bindingPath = bindingPath ?? "";
-            Profile = "";
         }
         
 
@@ -44,26 +43,20 @@ namespace Fig
         {
             SettingsDictionary = settingsDictionary;
         }
-
-        /// <summary>
-        /// The current environment, used as a suffix when looking up keys, will take precedence over
-        /// key with same name without suffix. The suffix does not include the : separator.
-        /// </summary>
-        public string Profile { get; internal set; }
         
         /// <summary>
         /// Replace all occurrences of the pattern ${key} within the provided template
         /// if KEY has a configuration selector, ie ${key:prod} it will take precedence over the current Environment
         /// </summary>
-        internal string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template, Profile);
+        internal string ExpandVariables(string template) => SettingsDictionary.ExpandVariables(template);
 
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
         /// </summary>
-        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
+        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown. Default is false</param>
         /// <param name="path">Defaults typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public T Bind<T>(bool requireAll = true, string path = null) where T : new()
+        public T Bind<T>(bool requireAll = false, string path = null) where T : new()
         {
             var target = new T();
             Bind(target, requireAll, path);
@@ -74,16 +67,16 @@ namespace Fig
         /// Populate the properties on a provided Type that match the keys in the SettingsDictionary.
         /// </summary>
         /// <param name="target">The object to set properties on</param>
-        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown</param>
+        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown. Default is false</param>
         /// <param name="path">Defaults typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public void Bind<T>(T target, bool requireAll = true, string path = null)
+        public void Bind<T>(T target, bool requireAll = false, string path = null)
         {
             path = path ?? typeof(T).Name;
             BindProperties(target, requireAll, path);
         }
 
-        private void BindProperties(object target, bool requireAll = true, string bindingPath = null)
+        private void BindProperties(object target, bool requireAll, string bindingPath = null)
         { 
             bindingPath = bindingPath ?? _bindingPath;
 
@@ -103,34 +96,33 @@ namespace Fig
                 }
                 catch (TargetInvocationException ex)
                 {
-                    throw;
-                    throw new ConfigurationException($"Failed to bind {property.Name}: " + ex.InnerException.Message);
+                    throw new ConfigurationException($"Failed to bind {property.Name}: " + ex.InnerException?.Message);
                 }
                 catch (Exception ex)
                 {
-                    throw;
                     throw new ConfigurationException($"Failed to bind {property.Name}: " + ex.GetType().Name);
                 }
             }
         }
         
-        private object GetPropertyValue(PropertyInfo property, string key, bool requireAll)
+        private object GetPropertyValue(PropertyInfo property, string key, bool required)
         {
-            if (SettingsDictionary.TryGetValue(key, Profile, out _))
+            if (SettingsDictionary.TryGetValue(key, out _))
             {
                 return Get(property.PropertyType, key);
             }
 
-            if (requireAll) throw new ConfigurationException("Missing key " + key);
+            if (required) throw new ConfigurationException("Missing key " + key);
             return null;
         }
         
         /// <summary>
-        /// Get as string without any conversion
+        /// Get value as string without any conversion
         /// </summary>
         public string Get(string key, Func<string> @default = null)
             => Get<string>(key, @default);
 
+        public string Get(string key, string @default) => Get(key, () => default);
 
         /// <summary>
         /// Get the string for a given key and convert to the desired type
@@ -142,8 +134,7 @@ namespace Fig
         /// <exception cref="KeyNotFoundException">Key is not present and no default was provided</exception>
         public T Get<T>(string key, Func<T> @default = null)
         {
-            var found = SettingsDictionary
-                .TryGetValue(key, Profile, out var result);
+            var found = SettingsDictionary.TryGetValue(key, out var result);
             if (found) return _converter.Convert<T>(result);
             if (@default != null) return @default();
             throw new KeyNotFoundException();
@@ -152,7 +143,7 @@ namespace Fig
         public bool TryGet<T>(string key, out T result)
         {
             result = default(T);
-            var found = SettingsDictionary.TryGetValue(key, Profile, out var value);
+            var found = SettingsDictionary.TryGetValue(key, out var value);
             if (found) result = _converter.Convert<T>(value);
             return found;
         }
@@ -166,7 +157,7 @@ namespace Fig
             var key = propertyName;
             if (_bindingPath.Length > 0) key = _bindingPath +  "." + key;
 
-            if (!SettingsDictionary.TryGetValue(key, Profile, out string value))
+            if (!SettingsDictionary.TryGetValue(key, out string value))
             {
                 throw new KeyNotFoundException(key);
             }

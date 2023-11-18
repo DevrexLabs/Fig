@@ -27,16 +27,10 @@ namespace Fig.Test
                 ["MyTimeSpan"] = "00:42:00",
 
                 ["Key"] = "Key",
-                ["Key:PROD"] = "PROD",
-                ["Key:TEST"] = "TEST",
-                ["Key:PROD2"] = "PROD",
                 ["ServerIp"] = "127.0.0.1",
                 ["ServerEndPoint"] = "127.0.0.1:80",
 
                 ["env"] = "staging",
-                ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
-
-                ["ExampleSettings.MyTimeSpan:FAIL"] = "not a timespan"
             };
 
             var dictionary = new LayeredSettingsDictionary();
@@ -70,46 +64,6 @@ namespace Fig.Test
         public void BindingPath()
         {
             Assert.AreEqual(TimeSpan.FromMinutes(42), _mySettings.MyTimeSpan);
-        }
-
-        [Test]
-        public void ProfileIsRespected()
-        {
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(_settingsDictionary)
-                .Build();
-
-            //No Profile, should return unqualified setting
-            Assert.AreEqual("Key", settings.Get<string>("Key"));
-
-            settings.Profile = "prod";
-            Assert.AreEqual("PROD", settings.Get<string>("Key"));
-
-            settings.Profile = "test";
-            Assert.AreEqual("TEST", settings.Get<string>("Key"));
-        }
-
-        [Test]
-        public void InitialProfile()
-        {
-            var dictionary = new SettingsDictionary()
-            {
-                ["Profile"] = "staging",
-                ["ExampleSettings.MyTimeSpan:staging"] = "00:15:00",
-                ["ExampleSettings.MyTimeSpan"] = "00:10:00",
-                ["ExampleSettings.RequiredInt"] = "200",
-                ["ExampleSettings.MyReadonlyIntProperty"] = "200"
-            };
-
-            var settings = new SettingsBuilder()
-                .UseSettingsDictionary(dictionary)
-                .SetProfile("${Profile}")
-                .Build();
-            
-            var mySettings = settings.Bind<ExampleSettings>(requireAll: false);
-
-            Assert.AreEqual(TimeSpan.FromMinutes(15), mySettings.MyTimeSpan);
-            Assert.AreEqual("staging", settings.Profile);
         }
     }
 
