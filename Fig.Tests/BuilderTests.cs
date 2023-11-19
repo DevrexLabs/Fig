@@ -20,7 +20,7 @@ namespace Fig.Test
             Environment.SetEnvironmentVariable("ENV", "TEST");
             var settings = new SettingsBuilder()
                 .UseEnvironmentVariables()
-                .UseAppSettingsJson("appSettings.${ENV}.json", required: true)
+                .UseAppSettingsJson("appsettings.${ENV}.json", required: true)
                 .Build();
             Assert.DoesNotThrow(() => settings.Get("AllowedHosts"));
         }
