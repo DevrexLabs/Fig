@@ -42,11 +42,29 @@ namespace Fig
         /// <remarks>The path separator (default is _) will be translated to a dot</remarks>
         /// </summary>
         /// <param name="prefix">For example FIG_, default is no prefix. </param>
-        /// <param name="dropPrefix">When true, the prefix will not be included in the key</param>
+        /// <param name="dropPrefix">When true, the prefix will not be included in the key. default is true</param>
         /// <returns></returns>
         public SettingsBuilder UseEnvironmentVariables(string prefix = "", bool dropPrefix = true)
         {
             Add(new EnvironmentVariablesSource(prefix, dropPrefix).ToSettingsDictionary());
+            return this;
+        }
+
+        /// <summary>
+        /// Read a single environment variable
+        /// </summary>
+        /// <param name="name">the name of the environment variable</param>
+        /// <param name="required"></param>
+        /// <returns></returns>
+        /// <exception cref="ConfigurationException">Thrown if the variable is required but not defined</exception>
+        public SettingsBuilder UseEnvironmentVariable(string name, bool required = false)
+        {
+            var val = Environment.GetEnvironmentVariable(name);
+            if (val is null && required) throw new ConfigurationException("Required ENV var not found: " + name);
+            if (val != null) Add(new SettingsDictionary()
+            {
+                [name] = val
+            });
             return this;
         }
 

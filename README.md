@@ -6,6 +6,8 @@ A .NET Standard 2.0 library to help you read application configuration settings 
 
 This README is the documentation.
 
+Breaking changes with version 2.0, please read the [Release notes]() carefully before upgrading from an older version.
+
 ## Documentation
 Do you have code like the following sprinkled across your code base?
 
@@ -99,6 +101,25 @@ DbSettings.ConnectionString
 NetworkSettings.TcpPort
 NetworkSettings.Retries
 ```
+## Binding to arrays
+Append indicies to your configuration keys to define an array:
+
+```
+Servers.0 = 10.0.0.1
+Servers.1 = 10.0.0.2
+```
+
+and then bind to a property of type array:
+
+```csharp
+  class MySettings
+  {
+     public string[] Servers { get; set;}
+  }
+```
+Arrays in json files will work this way. See the section below on appsettings.json.
+
+## Variable substitution
 
 ## Binding Validation
 Properties are either required or optional. To make a property optional, assign it a non-null value before binding.
@@ -121,6 +142,7 @@ So given the following class:
 ```
 
 the `RefillInterval` and `EnableEspressoMachine` parameters are required while the `Greeting` property is optional.
+
 
 ## Retrieving values by key
 
@@ -300,7 +322,7 @@ overloads to setup a connection to your database.
 ```
 The SQL query used is `SELECT key, value FROM FigSettings`. You can pass your own query:
 
-```
+```csharp
   var settings = new SettingsBuilder()
    .UseAppSettingsJson("appsettings.json")
    .UseSql<SqlConnection>("ConnectionStrings.SQLiteConnection", "SELECT a,b FROM MySettings")
@@ -314,16 +336,16 @@ lower layers.
 
 ```c#
    var settings = new SettingsBuilder()
+    .UseEnvironmentVariable("ENV")
     .UseAppSettingsJson("appSettings.json")
-    .UseAppSettingsJson("appSettings.${ENV}.json", optional:true)
+    .UseAppSettingsJson("appSettings.${ENV}.json", required:false)
     .UseDotEnv()
-    .UseEnvironmentVariables(prefix: "FIG_", dropPrefix:false)
+    .UseEnvironmentVariables()
     .UseCommandLine(args)    
     .Build<Settings>();
 ```
-Notice the environment specific json file. The variable `${ENV}`
-will be looked up based on what has been added so far:
-environment variables and command line.
+Notice the variable substitution in the second json file. The variable `${ENV}`
+will be looked up in the settings dictionary built so far.
 
 ## Install from nuget
 ```bash
@@ -347,11 +369,11 @@ with keys and values of each layer:
 
 ```
 -------------------- Layer 0 ----------------------
-| Network.ip:TEST        | 127.0.0.1              |
-| Network.port:TEST      | 13001                  |
+| Network.ip             | 127.0.0.1              |
+| Network.port           | 13001                  |
 -------------------- Layer 1 ----------------------
-| Network.ip:PROD        | 10.0.0.1               |
-| Network.port:PROD      | 3001                   |
+| Network.ip             | 10.0.0.1               |
+| Network.port           | 3001                   |
 ---------------------------------------------------
 ```
 
