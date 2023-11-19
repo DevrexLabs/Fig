@@ -53,13 +53,13 @@ namespace Fig
         /// <summary>
         /// Create an instance of T and populate all it's public properties,
         /// </summary>
-        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown. Default is false</param>
-        /// <param name="path">Defaults typeof(T).Name</param>
+        /// <param name="validate">If any property on the bound object is null, throw an exception. Default is true</param>
+        /// <param name="path">Defaults to typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public T Bind<T>(bool requireAll = false, string path = null) where T : new()
+        public T Bind<T>(bool validate = true, string path = null) where T : new()
         {
             var target = new T();
-            Bind(target, requireAll, path);
+            Bind(target, validate, path);
             return target;
         }
 
@@ -67,16 +67,16 @@ namespace Fig
         /// Populate the properties on a provided Type that match the keys in the SettingsDictionary.
         /// </summary>
         /// <param name="target">The object to set properties on</param>
-        /// <param name="requireAll">All the properties on the target must be bound, otherwise an exception is thrown. Default is false</param>
-        /// <param name="path">Defaults typeof(T).Name</param>
+        /// <param name="validate">If any property on the bound object is null, throw an exception. Default is true</param>
+        /// <param name="path">Defaults to typeof(T).Name</param>
         /// <typeparam name="T"></typeparam>
-        public void Bind<T>(T target, bool requireAll = false, string path = null)
+        public void Bind<T>(T target, bool validate = true, string path = null)
         {
             path = path ?? typeof(T).Name;
-            BindProperties(target, requireAll, path);
+            BindProperties(target, validate, path);
         }
 
-        private void BindProperties(object target, bool requireAll, string bindingPath = null)
+        private void BindProperties(object target, bool validate, string bindingPath = null)
         { 
             bindingPath = bindingPath ?? _bindingPath;
 
@@ -91,7 +91,9 @@ namespace Fig
                         || property.PropertyType.IsInterface) continue;
                     
                     var name = String.IsNullOrEmpty(bindingPath?.Trim()) ? property.Name : $"{bindingPath}.{property.Name}";
-                    var result = GetPropertyValue(property, name, requireAll);
+                    var defaultValue = property.GetValue(target);
+                    var required = validate && defaultValue is null; 
+                    var result = GetPropertyValue(property, name, required);
                     property.SetValue(target, result);
                 }
                 catch (TargetInvocationException ex)
@@ -117,13 +119,24 @@ namespace Fig
         }
         
         /// <summary>
-        /// Get value as string without any conversion
+        /// Retrieve a value as string without any conversion.
+        /// If the key is not found, return the default provided by the callback
         /// </summary>
         public string Get(string key, Func<string> @default = null)
             => Get<string>(key, @default);
 
-        public string Get(string key, string @default) => Get(key, () => default);
+        /// <summary>
+        /// Retrieve a value as string without any conversion.
+        /// If the key is not found, return the default
+        /// </summary>
+        public string Get(string key, string @default) => Get(key, () => @default);
 
+        /// <summary>
+        /// Retrieve the the value for the given key and convert to type T.
+        /// If the key is missing return the provided default
+        /// </summary>
+        public T Get<T>(string key, T @default) => Get<T>(key, () => @default);
+        
         /// <summary>
         /// Get the string for a given key and convert to the desired type
         /// </summary>

@@ -31,7 +31,7 @@ namespace Fig.Test
         }
 
         [Test]
-        public void WhenBindAndMissingSettingsPropertyThrowsException()
+        public void PropertiesMustNotBeNullAfterBinding()
         {
             _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
@@ -40,11 +40,11 @@ namespace Fig.Test
                 })
                 .Build();
 
-            Assert.Throws<ConfigurationException>(() => _settings.Bind<TestClass>(requireAll:true));
+            Assert.Throws<ConfigurationException>(() => _settings.Bind<TestClass>(validate:true));
         }
 
         [Test]
-        public void CanBindWhenPropertiesMissingAndNotRequireAll()
+        public void CanBindWhenPropertiesMissingAndValidationIsDisabled()
         {
             _settings = new SettingsBuilder()
                 .UseSettingsDictionary(new SettingsDictionary()
@@ -53,7 +53,7 @@ namespace Fig.Test
                 })
                 .Build();
 
-            var testClass = _settings.Bind<TestClass>(requireAll: false);
+            var testClass = _settings.Bind<TestClass>(validate: false);
 
             Assert.AreEqual("Fullname", testClass.Name);
             Assert.AreEqual(0, testClass.Age);
@@ -82,6 +82,7 @@ namespace Fig.Test
             public int Age { get; set; }
             public decimal Pi { get; set; }
             public int Zero { get; } = 0;
+            public int? NullableInt { get; set; }
         }
         
     }
