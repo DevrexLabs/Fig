@@ -30,7 +30,7 @@ namespace Fig.Test
         {
             Assert.DoesNotThrow(() =>
             {
-                var settings = new SettingsBuilder()
+                new SettingsBuilder()
                     .UseAppSettingsJson("nonexistent.json", required: false)
                     .Build();            
             });
@@ -41,7 +41,7 @@ namespace Fig.Test
         {
             Assert.DoesNotThrow(() =>
             {
-                var settings = new SettingsBuilder()
+                new SettingsBuilder()
                     .UseAppSettingsJson("nonexistent.${ENV}.json", required: false)
                     .Build();
             });
