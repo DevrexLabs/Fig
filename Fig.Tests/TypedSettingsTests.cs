@@ -23,7 +23,7 @@ namespace Fig.Test
         [Test]
         public void WhenBindReturnsValue()
         {
-            var testClass = _settings.Bind<TestClass>();
+            var testClass = _settings.Bind<TestClass>(validate:false);
 
             Assert.AreEqual("Fullname", testClass.Name);
             Assert.AreEqual(40, testClass.Age);
