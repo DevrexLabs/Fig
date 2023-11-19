@@ -6,7 +6,8 @@ A .NET Standard 2.0 library to help you read application configuration settings 
 
 This README is the documentation.
 
-Breaking changes with version 2.0, please read the [Release notes]() carefully before upgrading from an older version.
+## Breaking changes with version 2.0!
+Please read the [Release notes](https://github.com/DevrexLabs/Fig/releases/tag/2.0.24) carefully before upgrading from an older version.
 
 ## Documentation
 Do you have code like the following sprinkled across your code base?
