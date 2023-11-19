@@ -1,8 +1,8 @@
 ﻿
-[![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig) [![Join the chat at https://gitter.im/DevrexLabs/Fig](https://badges.gitter.im/DevrexLabs/Fig.svg)](https://gitter.im/DevrexLabs/Fig?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-## Fig
-
-A .NET Standard 2.0 library to help you read application configuration settings from multiple sources. Fig is similar to the Microsoft Configuration Extensions used with Asp.NET Core but adds some additional behavior yet still has fewer dependencies. 
+[![Build status](https://ci.appveyor.com/api/projects/status/cp39he84h5ar1edk?svg=true)](https://ci.appveyor.com/project/rofr/fig)
+ 
+# Fig
+A .NET Standard 2.0 library to help you read application configuration settings from multiple sources. Fig is similar to the Microsoft Configuration Extensions used with AspnetCore but adds some additional behavior yet still has fewer dependencies. 
 
 This README is the documentation.
 
@@ -27,18 +27,20 @@ Fig wraps these mundane boilerplate tasks into a simple library letting you eith
 
 
 ## Setting up the configuration sources
+Load configuration data from multiple sources
+using a fluent builder API. If there are duplicate keys the last one encountered takes precedence. Keys are case insensitive.
+
 ```c#
-  // Load configuration data from multiple sources
-  // using a fluent builder API.  
   var settings = new SettingsBuilder()
     .UseAppSettingsXml()
     .UseEnvironmentVariables()
     .Build();
-
 ```
 
+Do this when your application starts up and then keep a reference to the settings object.
+
 ## Binding
-The example above uses a string key "CoffeeRefillIntervall". With binding you define custom configuration classes with strongly typed properties. Fig will assign all the properties that have a matching key.
+Next, define a simpe class with read/write properties to represent your configurable settings. Now call `settings.Bind<T>()` and Fig will create an instance of T and assign properties with matching names.
 
 ```csharp
    public class CoffeeShopSettings
@@ -49,7 +51,6 @@ The example above uses a string key "CoffeeRefillIntervall". With binding you de
       public bool EnableEspressoMachine { get; set; }
    }
 
-   //Use the SettingsBuilder to build an instance
    var settings = new SettingsBuilder()
       .UseAppSettingsXml()
       .Build();
@@ -59,7 +60,6 @@ The example above uses a string key "CoffeeRefillIntervall". With binding you de
    //It's also possible to bind to an existing object
    var shopSettings = new CoffeeShopSettings();
    settings.Bind(shopSettings);
-
 ```
 
 By default, the class name will be used as a qualifier before the property name, so the preceding example will bind to
@@ -69,13 +69,13 @@ the following keys:
   CoffeeShopSettings.EnableEspressoMachine
 ```
 
-Change this behavior by passing an alternative prefix, not including the ".":
+Change this behavior by passing an alternative path, not including the ".":
 
 ```csharp
   //CoffeeShop.RefillInterval
-  settings.Bind<CoffeeShopSettings>(prefix: "CoffeeShop");
+  settings.Bind<CoffeeShopSettings>(path: "CoffeeShop");
   //or just "RefillInterval"
-  settings.Bind<CoffeeShopSettings>(prefix: "")
+  settings.Bind<CoffeeShopSettings>(path: "")
 ```
 
 ## Binding to multiple objects
@@ -101,7 +101,13 @@ NetworkSettings.Retries
 ```
 
 ## Binding Validation
-When binding, properties that are null must be provided in the configuration. So to define a required property do not assign it a default value. To make value type required, define them using `Nullable<>`. You can disable validation by passing `validation: false` to the `Binding()` methods.
+Properties are either required or optional. To make a property optional, assign it a non-null value before binding.
+
+Note that value types have non-null defaults. So to make them required, declare using `Nullable<T>`
+
+Fig will validate by throwing an exception if any property on the target is null after binding.
+
+You can disable validation by passing `validation: false` to the `Binding()` methods.
 
 So given the following class:
 
@@ -114,9 +120,12 @@ So given the following class:
    }
 ```
 
-The RefillInterval and EnableEspressoMachine parameters must be provided. The `Greeting`` property is assigned a default which means it can be overriden.
+the `RefillInterval` and `EnableEspressoMachine` parameters are required while the `Greeting` property is optional.
 
 ## Retrieving values by key
+
+For simple applications with just a few parameters defining a custom class could be considered over-engineering. In this case you can retrieve values directly by key, either as strings or converted to a desired type.
+
 ```csharp
   //Or grab directly by key
   var key = "CoffeeRefillInterval";
@@ -130,7 +139,6 @@ The RefillInterval and EnableEspressoMachine parameters must be provided. The `G
   var pricePerCup = settings.Get("PricePerCup", 24);
 
 ```
-
 Calling `Get()` without a default will throw a KeyNotFoundException if the key is missing. Keys are not case sensitive.
 
 ## Configuration sources
