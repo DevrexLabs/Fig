@@ -15,6 +15,7 @@
     <Copyright>Robert Friberg et al</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RootNamespace>Fig</RootNamespace>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />

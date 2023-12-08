@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using NUnit.Framework;
 
 namespace Fig.Test;

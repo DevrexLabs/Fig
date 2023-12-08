@@ -17,29 +17,21 @@ namespace Fig
         /// </summary>
         private readonly IStringConverter _converter;
 
-        /// <summary>
-        /// Path to the node in the tree to bind to for example:
-        /// Given keys A.B.C and A.B.D, a binding path of A.B
-        /// will bind the values of A.B.C and A.B.D to properties C and D of this type
-        /// </summary>
-        private readonly string _bindingPath;
-
         public override String ToString()
         {
             if (SettingsDictionary is null) return base.ToString();
             return SettingsDictionary.AsString();
         }
         
-        private Settings(string bindingPath = null, IStringConverter converter = null)
+        private Settings(IStringConverter converter = null)
         {
             _converter = converter ?? new InvariantStringConverter();
-            _bindingPath = bindingPath ?? "";
         }
         
 
         internal Settings(LayeredSettingsDictionary settingsDictionary,
-            string bindingPath = null, IStringConverter converter = null)
-            : this(bindingPath, converter)
+            IStringConverter converter = null)
+            : this(converter)
         {
             SettingsDictionary = settingsDictionary;
         }
@@ -76,10 +68,15 @@ namespace Fig
             BindProperties(target, validate, path);
         }
 
+        internal string Combine(string bindingPath, string typeName, string propertyName)
+        {
+            if (bindingPath is null) return $"{typeName}.{propertyName}";
+            if (bindingPath.Trim() == "") return propertyName;
+            else return $"{bindingPath}.{propertyName}";
+        }
+        
         private void BindProperties(object target, bool validate, string bindingPath = null)
-        { 
-            bindingPath = bindingPath ?? _bindingPath;
-
+        {
             foreach (var property in target.GetType().GetProperties())
             {
                 try
@@ -89,12 +86,12 @@ namespace Fig
                     if (propertyIsReadonly 
                         || property.PropertyType.IsAbstract 
                         || property.PropertyType.IsInterface) continue;
-                    
-                    var name = String.IsNullOrEmpty(bindingPath?.Trim()) ? property.Name : $"{bindingPath}.{property.Name}";
+
+                    var name = Combine(bindingPath, property.PropertyType.Name, property.Name);
                     var defaultValue = property.GetValue(target);
                     var required = validate && defaultValue is null; 
                     var result = GetPropertyValue(property, name, required);
-                    property.SetValue(target, result);
+                    if (result != null) property.SetValue(target, result);
                 }
                 catch (TargetInvocationException ex)
                 {
@@ -165,11 +162,8 @@ namespace Fig
         /// <summary>
         /// This is where the actual retrieval and type conversion happens
         /// </summary>
-        private object Get(Type propertyType, string propertyName)
+        private object Get(Type propertyType, string key)
         {
-            var key = propertyName;
-            if (_bindingPath.Length > 0) key = _bindingPath +  "." + key;
-
             if (!SettingsDictionary.TryGetValue(key, out string value))
             {
                 throw new KeyNotFoundException(key);
